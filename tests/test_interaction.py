@@ -43,6 +43,15 @@ COMMANDS = [
     'rebooted',
 ]
 
+RESULT_TAB = """
+# First Comment
+*/30 * * * * firstcommand
+# Middle Comment
+* * * 10 * byweek
+0 5 * * * spaced
+@reboot rebooted
+# Last Comment"""
+
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
@@ -53,11 +62,10 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(self.crontab.fake, INITAL_TAB,
             "Inital values are set currently")
         self.crontab.write()
-        inital = INITAL_TAB.split('\n')
+        results = RESULT_TAB.split('\n')
         line_no = 0
         for line in self.crontab.fake.split('\n'):
-            original = inital[line_no]
-            self.assertEqual(line, original)
+            self.assertEqual(line, results[line_no])
             line_no += 1
 
     def test_access(self):

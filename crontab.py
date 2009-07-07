@@ -58,8 +58,8 @@ import tempfile
 __version__ = '0.9'
 
 CRONCMD = "/usr/bin/crontab"
-ITEMREX = re.compile('^\s*([^@#\s]+)\s([^@#\s]+)\s([^@#\s]+)' +
-    '\s([^@#\s]+)\s([^@#\s]+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
+ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
+    '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
 SPECREX = re.compile('@(\w+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
 DEVNULL = ">/dev/null 2>&1"
 
