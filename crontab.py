@@ -55,7 +55,7 @@ t.write()
 import os, re, sys
 import tempfile
 
-__version__ = '0.9'
+__version__ = '0.9.3'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -151,7 +151,10 @@ class CronTab(object):
                     "Ignoring invalid crontab line `%s`\n" % str(cron))
                 continue
             crons.append(unicode(cron))
-        return '\n'.join(crons)
+        result = '\n'.join(crons)
+        if result[-1] not in [ '\n', '\r' ]:
+            result += '\n'
+        return result
 
     def new(self, command='', comment=''):
         """
