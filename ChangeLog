@@ -1,3 +1,8 @@
+python-crontab (0.9.3) jaunty; urgency=low
+
+  * Fixed problem with crontab line endings
+
+ -- Martin Owens (DoctorMO) <doctormo@gmail.com>  Tue, 18 Sep 2009 06:36:24 -0500
 python-crontab (0.9.2) jaunty; urgency=low
 
   * Fixed problem with comments and invalid line printing
