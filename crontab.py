@@ -34,14 +34,14 @@ cron.hour().every(4)
 cron2 = tab.new(command='/foo/bar',comment='SomeID')
 cron2.every_reboot()
 
-list = tab.find('bar')
+list = tab.find_command('bar')
 cron3 = list[0]
 cron3.clear()
 cron3.minute().every(1)
 
 print unicode(tab.render())
 
-for cron4 in tab.find('echo'):
+for cron4 in tab.find_command('echo'):
     print cron4
 
 for cron5 in tab:
