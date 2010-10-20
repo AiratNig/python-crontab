@@ -50,7 +50,8 @@ RESULT_TAB = """
 * * * 10 * byweek
 0 5 * * * spaced
 @reboot rebooted
-# Last Comment"""
+# Last Comment
+"""
 
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""

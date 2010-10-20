@@ -1,5 +1,5 @@
 #
-# Copyright 2008, Martin Owens.
+# Copyright 2010, Martin Owens.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,6 @@
 # - Gaute Hope <eg at gaute dot vetsj dot com>
 # - Kristof Vansant <de_lupus at pandora dot be>
 #
-
 """
 Example Use:
 
@@ -55,7 +54,7 @@ t.write()
 import os, re, sys
 import tempfile
 
-__version__ = '0.9.3'
+__version__ = '0.9.5'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -213,14 +212,16 @@ class CronItem(object):
     May be considered to be a cron job object.
     """
     def __init__(self, line=None, command='', meta=''):
-        self.command = CronCommand(unicode(command))
-        self._meta   = meta
-        self.valid   = False
+        self.valid = False
         self.slices  = []
         self.special = False
         self.set_slices()
+        self._meta   = meta
         if line:
             self.parse(line)
+        elif command:
+            self.command = CronCommand(unicode(command))
+            self.valid = True
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""

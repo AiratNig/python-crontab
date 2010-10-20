@@ -7,6 +7,6 @@ import crontab
 from crontab import CronTab
 
 t = CronTab()
-r = t.remove_all("echo3")
+r = t.remove_all("bar")
 t.write()
 
