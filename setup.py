@@ -25,7 +25,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 setup(
         name             = 'python-crontab',
-        version          = '0.9.4',
+        version          = '0.9.5',
         description      = 'Python Crontab API',
         long_description = "Allows you to read and write user crontabs via python programs.",
         author           = 'Martin Owens',
