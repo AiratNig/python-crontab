@@ -151,7 +151,7 @@ class CronTab(object):
                 continue
             crons.append(unicode(cron))
         result = '\n'.join(crons)
-        if result[-1] not in [ '\n', '\r' ]:
+        if result and result[-1] not in [ '\n', '\r' ]:
             result += '\n'
         return result
 
