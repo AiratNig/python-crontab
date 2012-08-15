@@ -18,6 +18,7 @@
 #
 
 from distutils.core import setup
+from crontab import __version__
 import os
 
 # remove MANIFEST. distutils doesn't properly update it when the contents of directories change.
@@ -25,7 +26,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 setup(
         name             = 'python-crontab',
-        version          = '0.9.5',
+        version          = __version__,
         description      = 'Python Crontab API',
         long_description = "Allows you to read and write user crontabs via python programs.",
         author           = 'Martin Owens',

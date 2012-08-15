@@ -1,5 +1,5 @@
 #
-# Copyright 2010, Martin Owens.
+# Copyright 2012, Martin Owens <doctormo@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ t.write()
 import os, re, sys
 import tempfile
 
-__version__ = '0.9.5'
+__version__ = '0.9.7'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -90,6 +90,12 @@ S_INFO = [
     { 'name' : 'Month',        'max_v' : 12, 'min_v' : 1, 'enum' : MONTH_ENUM },
     { 'name' : 'Day of Week',  'max_v' : 7,  'min_v' : 0, 'enum' : WEEK_ENUM },
 ]
+
+# Detect older unixes and help them out.
+OLD_SYSTEM = False
+if os.uname()[0] == "SunOS":
+    OLD_SYSTEM = True
+
 
 class CronTab(object):
     """
@@ -416,9 +422,11 @@ class CronRange(object):
     def render(self):
         """Render the ranged value for a cronjob"""
         value = '*'
-        if self.value_from > self.slice.min or self.value_to < self.slice.max:
+        if self.value_from > self.slice.min and self.value_to < self.slice.max:
             value = "%d-%d" % (int(self.value_from), int(self.value_to))
-        if int(self.seq) != 1:
+            if OLD_SYSTEM:
+                value = ','.join(range(int(self.value_from), int(self.value_to), int(self.seq)))
+        if not OLD_SYSTEM and int(self.seq) != 1:
             value += "/%d" % (int(self.seq))
         return value
 
@@ -431,7 +439,9 @@ class CronRange(object):
             if value >= self.slice.min and value <= self.slice.max:
                 return value
         except ValueError:
-            raise ValueError('Invalid range value %s' % str(value))
+            pass
+        raise ValueError("Invalid range value '%s', expected %d-%d for %s" % (
+            str(value), self.slice.min, self.slice.max, self.slice.name))
 
     def every(self, value):
         """Set the sequence value for this range."""

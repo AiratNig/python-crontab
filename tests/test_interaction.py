@@ -23,6 +23,8 @@ Test crontab interaction.
 import os
 import sys
 
+sys.path.insert(0, '../')
+
 import unittest
 from test import test_support
 from crontab import CronTab
@@ -30,6 +32,7 @@ from crontab import CronTab
 INITAL_TAB = """
 # First Comment
 */30 * * * * firstcommand
+* 10-20/3 * * * range
 # Middle Comment
 * * * 10 * byweek
  00 5  *   *   *      spaced
@@ -38,6 +41,7 @@ INITAL_TAB = """
 
 COMMANDS = [
     'firstcommand',
+    'range',
     'byweek',
     'spaced',
     'rebooted',
@@ -46,6 +50,7 @@ COMMANDS = [
 RESULT_TAB = """
 # First Comment
 */30 * * * * firstcommand
+* 10-20/3 * * * range
 # Middle Comment
 * * * 10 * byweek
 0 5 * * * spaced
