@@ -63,7 +63,7 @@ class BasicTestCase(unittest.TestCase):
     def setUp(self):
         self.crontab = CronTab(fake_tab=INITAL_TAB)
 
-    def test_presevation(self):
+    def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""
         self.assertEqual(self.crontab.fake, INITAL_TAB,
             "Inital values are set currently")
@@ -74,12 +74,70 @@ class BasicTestCase(unittest.TestCase):
             self.assertEqual(line, results[line_no])
             line_no += 1
 
-    def test_access(self):
+    def test_02_access(self):
         """All Entries Are Accessable"""
         line_no = 0
         for cron in self.crontab:
             self.assertEqual(unicode(cron.command), COMMANDS[line_no])
             line_no += 1
+
+    def test_03_blank(self):
+        """Render Blank"""
+        job = self.crontab.new(command='blank')
+        self.assertEqual(job.render(), '* * * * * blank')
+
+    def test_04_number(self):
+        """Render Number"""
+        job = self.crontab.new(command='number')
+        job.minute.on(4)
+        self.assertEqual(job.render(), '4 * * * * number')
+
+    def test_05_fields(self):
+        """Render Hours Days and Weeks"""
+        job = self.crontab.new(command='fields')
+        job.hour.on(4)
+        self.assertEqual(job.render(), '* 4 * * * fields')
+        job.dom.on(5)
+        self.assertEqual(job.render(), '* 4 5 * * fields')
+        job.month.on(6)
+        self.assertEqual(job.render(), '* 4 5 6 * fields')
+        job.dow.on(7)
+        self.assertEqual(job.render(), '* 4 5 6 7 fields')
+
+    def test_06_clear(self):
+        """Render Hours Days and Weeks"""
+        job = self.crontab.new(command='clear')
+        job.minute.on(3)
+        job.hour.on(4)
+        job.dom.on(5)
+        job.month.on(6)
+        job.dow.on(7)
+        self.assertEqual(job.render(), '3 4 5 6 7 clear')
+        job.clear()
+        self.assertEqual(job.render(), '* * * * * clear')
+
+    def test_07_range(self):
+        job = self.crontab.new(command='range')
+        job.minute.during(4,10)
+        self.assertEqual(job.render(), '4-10 * * * * range')
+        job.minute.during(15,19)
+        self.assertEqual(job.render(), '4-10,15-19 * * * * range')
+        job.minute.clear()
+        self.assertEqual(job.render(), '* * * * * range')
+        job.minute.during(15,19)
+        self.assertEqual(job.render(), '15-19 * * * * range')
+
+    def test_08_sequence(self):
+        job = self.crontab.new(command='seq')
+        job.hour.every(4)
+        self.assertEqual(job.render(), '* */4 * * * seq')
+        job.hour.during(2, 10)
+        self.assertEqual(job.render(), '* */4,2-10 * * * seq')
+        job.hour.clear()
+        self.assertEqual(job.render(), '* * * * * seq')
+        job.hour.during(2, 10).every(4)
+        self.assertEqual(job.render(), '* 2-10/4 * * * seq')
+
 
 if __name__ == '__main__':
     test_support.run_unittest(

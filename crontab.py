@@ -27,8 +27,8 @@ from crontab import CronTab
 tab = CronTab()
 cron = tab.new(command='/usr/bin/echo')
 
-cron.minute().during(5,50).every(5)
-cron.hour().every(4)
+cron.minute.during(5,50).every(5)
+cron.hour.every(4)
 
 cron2 = tab.new(command='/foo/bar',comment='SomeID')
 cron2.every_reboot()
@@ -36,7 +36,7 @@ cron2.every_reboot()
 list = tab.find_command('bar')
 cron3 = list[0]
 cron3.clear()
-cron3.minute().every(1)
+cron3.minute.every(1)
 
 print unicode(tab.render())
 
@@ -92,9 +92,9 @@ S_INFO = [
 ]
 
 # Detect older unixes and help them out.
-OLD_SYSTEM = False
-if os.uname()[0] == "SunOS":
-    OLD_SYSTEM = True
+COMPATIBILITY = False
+if os.uname()[0] == "SunOS" or os.environ.get('COMPATIBILITY', False):
+    COMPATIBILITY = True
 
 
 class CronTab(object):
@@ -300,22 +300,27 @@ class CronItem(object):
         for slice_v in self.slices:
             slice_v.clear()
 
+    @property
     def minute(self):
         """Return the minute slice"""
         return self.slices[0]
 
+    @property
     def hour(self):
         """Return the hour slice"""
         return self.slices[1]
 
+    @property
     def dom(self):
         """Return the day-of-the month slice"""
         return self.slices[2]
 
+    @property
     def month(self):
         """Return the month slice"""
         return self.slices[3]
 
+    @property
     def dow(self):
         """Return the day of the week slice"""
         return self.slices[4]
@@ -422,13 +427,21 @@ class CronRange(object):
     def render(self):
         """Render the ranged value for a cronjob"""
         value = '*'
-        if self.value_from > self.slice.min and self.value_to < self.slice.max:
-            value = "%d-%d" % (int(self.value_from), int(self.value_to))
-            if OLD_SYSTEM:
-                value = ','.join(range(int(self.value_from), int(self.value_to), int(self.seq)))
-        if not OLD_SYSTEM and int(self.seq) != 1:
-            value += "/%d" % (int(self.seq))
+        (v1, v2) = (int(self.value_from), int(self.value_to))
+
+        if v1 > self.slice.min and v2 < self.slice.max:
+            value = "%d-%d" % (v1, v2)
+            if COMPATIBILITY:
+                value = self._render_old(v1, v2, int(self.seq))
+        if int(self.seq) != 1:
+            if COMPATIBILITY and value == '*':
+                value = self._render_old(self.slice.min, self.slice.max, int(self.seq))
+            elif not COMPATIBILITY:
+                value += "/%d" % (int(self.seq))
         return value
+
+    def _render_old(self, v1, v2, seq=1):
+        return ','.join(map(str, range(v1, v2+1, seq)))
 
     def clean_value(self, value):
         """Return a cleaned value of the ranged value"""
