@@ -1,3 +1,17 @@
+python-crontab (1.0.0) precise; urgency=low
+
+  * Add many tests to complete the functionality
+  * Improve compatibility mode and test it
+  * Change API of slice calls to be properties instead of methods
+
+ -- Martin Owens (DoctorMO) <doctormo@gmail.com>  Thu, 16 Aug 2012 21:39:52 -0400
+
+python-crontab (0.9.7) precise; urgency=low
+
+  * Add unix/sunos compatibility mode
+
+ -- Martin Owens (DoctorMO) <doctormo@gmail.com>  Thu, 14 Aug 2012 21:39:17 -0400
+
 python-crontab (0.9.3) jaunty; urgency=low
 
   * Fixed problem with crontab line endings
