@@ -54,7 +54,7 @@ t.write()
 import os, re, sys
 import tempfile
 
-__version__ = '0.9.7'
+__version__ = '1.0.0'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
