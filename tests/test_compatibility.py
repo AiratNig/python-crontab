@@ -35,13 +35,14 @@ INITAL_TAB = """
 */30 * * * * firstcommand
 """
 
-class BasicTestCase(unittest.TestCase):
+class CompatTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
         self.crontab = CronTab(fake_tab=INITAL_TAB)
 
-    def test_03_addition(self):
+    def test_01_addition(self):
         """New Job Rendering"""
+        job = self.crontab.new('addition1')
         job.minute.during(0, 3)
         job.hour.during(21, 23).every(1)
         job.dom.every(1)
@@ -60,17 +61,8 @@ class BasicTestCase(unittest.TestCase):
         self.assertNotEqual(job.render(), '4-9 2-10/2 */3 * * addition2')
         self.assertEqual(job.render(), '4,5,6,7,8,9 2,4,6,8,10 1,11,21,31 * * addition2')
 
-        job = self.crontab.new(command='addition1')
-
-        job.minute().during(4, 9)
-        job.hour().during(2, 10).every(2)
-        job.dom().every(10)
-
-        self.assertNotEqual(job.render(), '4-9 2-10/2 */3 * * addition1')
-        self.assertEqual(job.render(), '4,5,6,7,8,9 2,4,6,8,10 1,11,21,31 * * addition1')
-
 
 if __name__ == '__main__':
     test_support.run_unittest(
-       BasicTestCase,
+       CompatTestCase,
     )
