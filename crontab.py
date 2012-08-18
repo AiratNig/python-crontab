@@ -375,65 +375,71 @@ class CronSlice(object):
 
     def every(self, n_value):
         """Set the every X units value"""
-        self.parts = [ self.get_range( '*/%d' % int(n_value) ) ]
+        self.parts = [ self.get_range( int(n_value) ) ]
 
     def on(self, *n_value):
         """Set the on the time value."""
         self.parts += n_value
 
-    def during(self, value_from, value_to):
+    def during(self, vfrom, vto):
         """Set the During value, which sets a range"""
-        range_value = self.get_range(
-            "%s-%s" % (str(value_from), str(value_to)))
-        self.parts.append( range_value )
-        return range_value
+        self.parts.append(self.get_range(vfrom, vto))
+        return self.parts[-1]
 
     def clear(self):
         """clear the slice ready for new vaues"""
         self.parts = []
 
-    def get_range(self, range_value):
+    def get_range(self, *vrange):
         """Return a cron range for this slice"""
-        return CronRange( self, range_value )
+        return CronRange( self, *vrange )
 
 
 class CronRange(object):
     """A range between one value and another for a time range."""
-    def __init__(self, slice_value, range_value=None):
-        self.value_from = None
-        self.value_to = None
-        self.slice = slice_value
+    def __init__(self, vslice, *vrange):
+        self.slice = vslice
         self.seq   = 1
-        if not range_value:
-            range_value = '*'
-        self.parse(range_value)
+
+        if not vrange:
+            self.all()
+        elif isinstance(vrange[0], basestring):
+            self.parse(vrange[0])
+        elif isinstance(vrange[0], int):
+            if len(vrange) == 2:
+                (self.vfrom, self.vto) = vrange
+            else:
+                self.seq = vrange[0]
+                self.all()
 
     def parse(self, value):
         """Parse a ranged value in a cronjob"""
         if value.find('/') > 0:
-            value, self.seq = value.split('/')
+            value, seq = value.split('/')
+            self.seq = int(seq)
         if value.find('-') > 0:
-            from_val, to_val = value.split('-')
-            self.value_from = self.clean_value(from_val)
-            self.value_to  = self.clean_value(to_val)
+            vfrom, vto = value.split('-')
+            self.vfrom = self.clean_value(vfrom)
+            self.vto  = self.clean_value(vto)
         elif value == '*':
-            self.value_from = self.slice.min
-            self.value_to  = self.slice.max
+            self.all()
         else:
             raise ValueError, 'Unknown cron range value %s' % value
+
+    def all(self):
+        """Set this slice to all units between the miniumum and maximum"""
+        self.vfrom = self.slice.min
+        self.vto  = self.slice.max
 
     def render(self):
         """Render the ranged value for a cronjob"""
         value = '*'
-
-        (vfrom, vto, seq) = (int(self.value_from), int(self.value_to), int(self.seq))
-
-        if vfrom > self.slice.min or vto < self.slice.max:
-            value = "%d-%d" % (vfrom, vto)
-        if seq != 1:
-            value += "/%d" % seq
+        if self.vfrom > self.slice.min or self.vto < self.slice.max:
+            value = "%d-%d" % (self.vfrom, self.vto)
+        if self.seq != 1:
+            value += "/%d" % self.seq
         if value != '*' and COMPATIBILITY:
-            value = ','.join(map(str, range(vfrom, vto+1, seq)))
+            value = ','.join(map(str, range(self.vfrom, self.vto+1, self.seq)))
         return value
 
     def clean_value(self, value):
