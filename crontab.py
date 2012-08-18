@@ -19,42 +19,40 @@
 # - Gaute Hope <eg at gaute dot vetsj dot com>
 # - Kristof Vansant <de_lupus at pandora dot be>
 #
-"""
-Example Use:
-
+EXAMPLE_USE = """
 from crontab import CronTab
 
-tab = CronTab()
-cron = tab.new(command='/usr/bin/echo')
+cron = CronTab()
+job  = cron.new(command='/usr/bin/echo')
 
-cron.minute.during(5,50).every(5)
-cron.hour.every(4)
+job.minute.during(5,50).every(5)
+job.hour.every(4)
 
-cron2 = tab.new(command='/foo/bar',comment='SomeID')
-cron2.every_reboot()
+job2 = cron.new(command='/foo/bar',comment='SomeID')
+job2.every_reboot()
 
-list = tab.find_command('bar')
-cron3 = list[0]
-cron3.clear()
-cron3.minute.every(1)
+list = cron.find_command('bar')
+job3 = list[0]
+job3.clear()
+job3.minute.every(1)
 
-print unicode(tab.render())
+print unicode(cron.render())
 
-for cron4 in tab.find_command('echo'):
-    print cron4
+for job4 in cron.find_command('echo'):
+    print job4
 
-for cron5 in tab:
-    print cron5
+for job5 in cron:
+    print job5
 
-tab.remove_all('echo')
-
-t.write()
+cron.remove_all('echo')
+cron.remove_all('/foo/bar')
+cron.write()
 """
 
 import os, re, sys
 import tempfile
 
-__version__ = '1.0.0'
+__version__ = '1.0'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -427,21 +425,16 @@ class CronRange(object):
     def render(self):
         """Render the ranged value for a cronjob"""
         value = '*'
-        (v1, v2) = (int(self.value_from), int(self.value_to))
 
-        if v1 > self.slice.min and v2 < self.slice.max:
-            value = "%d-%d" % (v1, v2)
-            if COMPATIBILITY:
-                value = self._render_old(v1, v2, int(self.seq))
-        if int(self.seq) != 1:
-            if COMPATIBILITY and value == '*':
-                value = self._render_old(self.slice.min, self.slice.max, int(self.seq))
-            elif not COMPATIBILITY:
-                value += "/%d" % (int(self.seq))
+        (vfrom, vto, seq) = (int(self.value_from), int(self.value_to), int(self.seq))
+
+        if vfrom > self.slice.min or vto < self.slice.max:
+            value = "%d-%d" % (vfrom, vto)
+        if seq != 1:
+            value += "/%d" % seq
+        if value != '*' and COMPATIBILITY:
+            value = ','.join(map(str, range(vfrom, vto+1, seq)))
         return value
-
-    def _render_old(self, v1, v2, seq=1):
-        return ','.join(map(str, range(v1, v2+1, seq)))
 
     def clean_value(self, value):
         """Return a cleaned value of the ranged value"""

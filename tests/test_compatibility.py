@@ -42,6 +42,24 @@ class BasicTestCase(unittest.TestCase):
 
     def test_03_addition(self):
         """New Job Rendering"""
+        job.minute.during(0, 3)
+        job.hour.during(21, 23).every(1)
+        job.dom.every(1)
+
+        self.assertEqual(job.render(), '0,1,2,3 21,22,23 * * * addition1')
+
+    def test_02_addition(self):
+        """New Job Rendering"""
+        job = self.crontab.new(command='addition2')
+
+        job.minute.during(4, 9)
+        job.hour.during(2, 10).every(2)
+        job.dom.every(10)
+
+
+        self.assertNotEqual(job.render(), '4-9 2-10/2 */3 * * addition2')
+        self.assertEqual(job.render(), '4,5,6,7,8,9 2,4,6,8,10 1,11,21,31 * * addition2')
+
         job = self.crontab.new(command='addition1')
 
         job.minute().during(4, 9)
