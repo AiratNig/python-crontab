@@ -27,8 +27,11 @@ import sys
 sys.path.insert(0, '../')
 
 import unittest
-from test import test_support
 from crontab import CronTab, EXAMPLE_USE
+try:
+    from test import test_support
+except ImportError:
+    from test import support as test_support
 
 class DummyStdout(object):
     def write(self, text):

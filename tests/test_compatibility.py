@@ -27,8 +27,11 @@ os.environ['COMPATIBILITY'] = 'True'
 sys.path.insert(0, '../')
 
 import unittest
-from test import test_support
 from crontab import CronTab
+try:
+    from test import test_support
+except ImportError:
+    from test import support as test_support
 
 INITAL_TAB = """
 # First Comment

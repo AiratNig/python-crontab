@@ -21,6 +21,7 @@
 #
 EXAMPLE_USE = """
 from crontab import CronTab
+import sys
 
 cron = CronTab()
 job  = cron.new(command='/usr/bin/echo')
@@ -36,13 +37,13 @@ job3 = list[0]
 job3.clear()
 job3.minute.every(1)
 
-print unicode(cron.render())
+sys.stdout.write(str(cron.render()))
 
 for job4 in cron.find_command('echo'):
-    print job4
+    sys.stdout.write(job4)
 
 for job5 in cron:
-    print job5
+    sys.stdout.write(job5)
 
 cron.remove_all('echo')
 cron.remove_all('/foo/bar')
@@ -52,7 +53,7 @@ cron.write()
 import os, re, sys
 import tempfile
 
-__version__ = '1.0'
+__version__ = '1.1'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -88,6 +89,14 @@ S_INFO = [
     { 'name' : 'Month',        'max_v' : 12, 'min_v' : 1, 'enum' : MONTH_ENUM },
     { 'name' : 'Day of Week',  'max_v' : 7,  'min_v' : 0, 'enum' : WEEK_ENUM },
 ]
+
+# Detect Python3
+import platform
+py3 = platform.python_version()[0] == '3'
+
+if py3:
+    unicode = str
+    basestring = str
 
 # Detect older unixes and help them out.
 COMPATIBILITY = False
@@ -238,7 +247,7 @@ class CronItem(object):
             self.valid = True
         elif line.find('@') < line.find('#') or line.find('#')==-1:
             result = SPECREX.findall(line)
-            if result and SPECIALS.has_key(result[0][0]):
+            if result and result[0][0] in SPECIALS:
                 o_value = result[0]
                 self.command = CronCommand(o_value[1])
                 self._meta   = o_value[3]
@@ -424,7 +433,7 @@ class CronRange(object):
         elif value == '*':
             self.all()
         else:
-            raise ValueError, 'Unknown cron range value %s' % value
+            raise ValueError('Unknown cron range value %s' % value)
 
     def all(self):
         """Set this slice to all units between the miniumum and maximum"""
