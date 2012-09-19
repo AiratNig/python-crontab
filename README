@@ -1,0 +1,9 @@
+This is a readme file.
+
+It should tell you how to install it... which you should be installing via your
+local package manager. But for those without, as root:
+
+python setup.py install
+
+
+

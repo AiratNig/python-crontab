@@ -30,6 +30,7 @@ setup(
         description      = 'Python Crontab API',
         long_description = "Allows you to read and write user crontabs via python programs.",
         author           = 'Martin Owens',
+        url              = 'https://launchpad.net/python-crontab',
         author_email     = 'doctormo@gmail.com',
         platforms        = 'linux',
         license          = 'GPLv3',
