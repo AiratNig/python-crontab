@@ -1,9 +1,106 @@
-This is a readme file.
+Description
+===========
 
-It should tell you how to install it... which you should be installing via your
-local package manager. But for those without, as root:
+Crontab module for read and writing crontab files and accessing the system cron
+automatically and simply using a direct API.
 
-python setup.py install
+Comparing the below chart to http://en.wikipedia.org/wiki/Cron#CRON_expression
+you will note that W, L, # and ? symbols are not supported.
+
+============= =========== ================= ===========================
+Field Name    Mandatory   Allowed Values    Allowed Special Characters
+============= =========== ================= ===========================
+Minutes       Yes         0-59              \* / , -
+Hours         Yes         0-23              \* / , -
+Day of month  Yes         1-31              \* / , -
+Month         Yes         1-12 or JAN-DEC   \* / , -
+Day of week   Yes         0-6 or SUN-SAT    \* / , -
+============= =========== ================= ===========================
+
+Supported special cases allow crontab lines to not use fields. These are supported::
+
+========== ===========
+Case       Meaning
+========== ===========
+@reboot    Every boot
+@hourly    0 * * * *
+@daily     0 0 * * *
+@weekly    0 0 * * 0
+@monthly   0 0 1 * *
+@yearly    0 0 1 1 *
+@annually  0 0 1 1 *
+@midnight  0 0 * * *
+========== ===========
+
+How to Use the Module
+=====================
+
+Getting access to a crontab can happen in four ways::
+
+    from crontab import CronTab
+
+    system_cron = CronTab()
+    user_cron = CronTab('root')
+    file_cron = CronTab(tabfile='filename.tab')
+    mem_cron = CronTab(tab="""
+      * * * * * command
+    """)
+
+Creating a new job is as simple as::
+
+    job  = cron.new(command='/usr/bin/echo')
+
+And setting the job's time restrictions::
+
+    job.minute.during(5,50).every(5)
+    job.hour.every(4)
+
+    job.dow.on('SUN')
+    job.month.during('APR', 'NOV')
+
+Creating a job with a comment::
+
+    job = cron.new(command='/foo/bar',comment='SomeID')
+
+Use a special syntax::
+
+    job.every_reboot()
+
+Find an existing job by command::
+
+    list = cron.find_command('bar')
+
+Clean a job of all rules::
+
+    job.clear()
+
+Iterate through all jobs::
+
+    for job in cron:
+        print job
+
+Iterate through all lines::
+
+    for line in cron.lines:
+        print job
+
+Remove Items::
+
+    cron.remove( job )
+    cron.remove_all('echo')
+
+Write CronTab back to system or filename::
+
+    cron.write()
+
+Write CronTab to new filename::
+
+    cron.write( 'output.tab' )
 
 
+Support
+=======
+
+ - Support for SunOS with compatability mode
+ - Python 3.2 and Python 2.7 tested
 
