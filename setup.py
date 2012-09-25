@@ -24,11 +24,15 @@ import os
 # remove MANIFEST. distutils doesn't properly update it when the contents of directories change.
 if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
+# Grab description for Pypi
+with open('README') as fhl:
+    description = fhl.read()
+
 setup(
         name             = 'python-crontab',
         version          = __version__,
         description      = 'Python Crontab API',
-        long_description = "Allows you to read and write user crontabs via python programs.",
+        long_description = description,
         author           = 'Martin Owens',
         url              = 'https://launchpad.net/python-crontab',
         author_email     = 'doctormo@gmail.com',
