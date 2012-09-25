@@ -17,20 +17,20 @@ Month         Yes         1-12 or JAN-DEC   \* / , -
 Day of week   Yes         0-6 or SUN-SAT    \* / , -
 ============= =========== ================= ===========================
 
-Supported special cases allow crontab lines to not use fields. These are supported::
+Supported special cases allow crontab lines to not use fields. These are the supported aliases:
 
-========== ===========
-Case       Meaning
-========== ===========
-@reboot    Every boot
-@hourly    0 * * * *
-@daily     0 0 * * *
-@weekly    0 0 * * 0
-@monthly   0 0 1 * *
-@yearly    0 0 1 1 *
-@annually  0 0 1 1 *
-@midnight  0 0 * * *
-========== ===========
+=========== ===========
+Case        Meaning
+=========== ===========
+@reboot     Every boot
+@hourly     0 * * * *
+@daily      0 0 * * *
+@weekly     0 0 * * 0
+@monthly    0 0 1 * *
+@yearly     0 0 1 1 *
+@annually   0 0 1 1 *
+@midnight   0 0 * * *
+=========== ===========
 
 How to Use the Module
 =====================
@@ -98,9 +98,8 @@ Write CronTab to new filename::
     cron.write( 'output.tab' )
 
 
-Support
-=======
+Extra Support
+=============
 
  - Support for SunOS with compatability mode
  - Python 3.2 and Python 2.7 tested
-
