@@ -22,7 +22,6 @@ Test crontab interaction.
 
 import os
 import sys
-os.environ['COMPATIBILITY'] = 'True'
 
 sys.path.insert(0, '../')
 
@@ -41,7 +40,7 @@ INITAL_TAB = """
 class CompatTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(fake_tab=INITAL_TAB)
+        self.crontab = CronTab(tab=INITAL_TAB, compat=True)
 
     def test_01_addition(self):
         """New Job Rendering"""

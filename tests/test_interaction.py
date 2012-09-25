@@ -64,16 +64,16 @@ RESULT_TAB = """
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(fake_tab=INITAL_TAB)
+        self.crontab = CronTab(tab=INITAL_TAB)
 
     def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""
-        self.assertEqual(self.crontab.fake, INITAL_TAB,
+        self.assertEqual(self.crontab.intab, INITAL_TAB,
             "Inital values are set currently")
         self.crontab.write()
         results = RESULT_TAB.split('\n')
         line_no = 0
-        for line in self.crontab.fake.split('\n'):
+        for line in self.crontab.intab.split('\n'):
             self.assertEqual(line, results[line_no])
             line_no += 1
 

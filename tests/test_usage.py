@@ -43,7 +43,7 @@ class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
     def test_03_usage(self):
         """Dont modify crontab"""
-        cron = CronTab(fake_tab=INITAL_TAB)
+        cron = CronTab(tab=INITAL_TAB)
         sys.stdout = DummyStdout()
         exec(EXAMPLE_USE)
         sys.stdout = sys.__stdout__

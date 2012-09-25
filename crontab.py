@@ -29,6 +29,9 @@ job  = cron.new(command='/usr/bin/echo')
 job.minute.during(5,50).every(5)
 job.hour.every(4)
 
+job.dow.on('SUN')
+job.month.during('APR', 'NOV')
+
 job2 = cron.new(command='/foo/bar',comment='SomeID')
 job2.every_reboot()
 
@@ -53,7 +56,7 @@ cron.write()
 import os, re, sys
 import tempfile
 
-__version__ = '1.1'
+__version__ = '1.2'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -61,7 +64,7 @@ ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
 SPECREX = re.compile('@(\w+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
 DEVNULL = ">/dev/null 2>&1"
 
-MONTH_ENUM = [
+MONTH_ENUM = [ None,
     'jan', 'feb', 'mar', 'apr', 'may',
     'jun', 'jul', 'aug', 'sep', 'oct',
     'nov', 'dec',
@@ -98,25 +101,26 @@ if py3:
     unicode = str
     basestring = str
 
-# Detect older unixes and help them out.
-COMPATIBILITY = False
-if os.uname()[0] == "SunOS" or os.environ.get('COMPATIBILITY', False):
-    COMPATIBILITY = True
 
 
 class CronTab(object):
     """
     Crontab object which can access any time based cron using the standard.
 
-    user = Set the user of the crontab (defaults to $USER)
-    fake_tab = Don't set to crontab at all, set to testable fake tab variable.
+    user    - Set the user of the crontab (defaults to $USER)
+    tab     - Use a string variable as the crontab instead of installed crontab
+    tabfile - Use
+    compat  - Force disable some features for SunOS (automatic).
+
     """
-    def __init__(self, user=None, fake_tab=None):
+    def __init__(self, user=None, tab=None, tabfile=None, compat=False):
         self.user  = user
         self.root  = ( os.getuid() == 0 )
         self.lines = None
         self.crons = None
-        self.fake = fake_tab
+        # Detect older unixes and help them out.
+        self.compat = compat or os.uname()[0] == "SunOS"
+        self.intab = tab
         self.read()
 
     def read(self):
@@ -126,12 +130,12 @@ class CronTab(object):
         """
         self.crons = []
         self.lines = []
-        if self.fake:
-          lines = self.fake.split('\n')
+        if self.intab:
+          lines = self.intab.split('\n')
         else:
           lines = os.popen(self._read_execute()).readlines()
         for line in lines:
-            cron = CronItem(line)
+            cron = CronItem(line, compat=self.compat)
             if cron.is_valid():
                 self.crons.append(cron)
                 self.lines.append(cron)
@@ -140,9 +144,9 @@ class CronTab(object):
 
     def write(self):
         """Write the crontab to the system. Saves all information."""
-        # Add to either the crontab or the fake tab.
-        if self.fake != None:
-          self.fake = self.render()
+        # Add to either the crontab or the internal tab.
+        if self.intab != None:
+          self.intab = self.render()
           return
 
         filed, path = tempfile.mkstemp()
@@ -174,7 +178,7 @@ class CronTab(object):
 
         Returns the new CronItem object.
         """
-        item = CronItem(command=command, meta=comment)
+        item = CronItem(command=command, meta=comment, compat=self.compat)
         self.crons.append(item)
         self.lines.append(item)
         return item
@@ -224,10 +228,11 @@ class CronItem(object):
     An item which objectifies a single line of a crontab and
     May be considered to be a cron job object.
     """
-    def __init__(self, line=None, command='', meta=''):
+    def __init__(self, line=None, command='', meta='', compat=False):
         self.valid = False
         self.slices  = []
         self.special = False
+        self.compat  = compat
         self.set_slices()
         self._meta   = meta
         if line:
@@ -265,7 +270,8 @@ class CronItem(object):
             if not o_value:
                 o_value = [None, None, None, None, None]
             self.slices.append(
-                CronSlice(value=o_value[i_value], **S_INFO[i_value]))
+                CronSlice(compat=self.compat, value=o_value[i_value],
+                    **S_INFO[i_value]))
 
     def is_valid(self):
         """Return true if this slice set is valid"""
@@ -332,6 +338,12 @@ class CronItem(object):
         """Return the day of the week slice"""
         return self.slices[4]
 
+    def __repr__(self):
+        return "<CronJob '%s'>" % str(self)
+
+    def __eq__(self, value):
+        return str(self) == str(value)
+
     def __str__(self):
         return self.__unicode__()
 
@@ -341,40 +353,44 @@ class CronItem(object):
 
 class CronSlice(object):
     """Cron slice object which shows a time pattern"""
-    def __init__(self, name, min_v, max_v, enum=None, value=None):
-        self.name  = name
-        self.min   = min_v
-        self.max   = max_v
-        self.enum  = enum
-        self.parts = []
-        self.value(value)
-
-    def value(self, value=None):
-        """Return the value of the entire slice."""
+    def __init__(self, name, min_v, max_v, enum=None, value=None, compat=False):
+        self.name   = name
+        self.min    = min_v
+        self.max    = max_v
+        self.enum   = enum
+        self.compat = compat
+        self.parts  = []
         if value:
-            self.parts = []
-            for part in value.split(','):
-                if part.find("/") > 0 or part.find("-") > 0 or part == '*':
-                    self.parts.append( self.get_range( part ) )
-                else:
-                    if self.enum and part.lower() in self.enum:
-                        part = self.enum.index(part.lower())
-                    try:
-                        self.parts.append( int(part) )
-                    except:
-                        raise ValueError(
-                            'Unknown cron time part for %s: %s' % (
-                            self.name, part))
-        return self.render()
+            self._set_value(value)
 
-    def render(self):
-        """Return the slice rendered as a crontab"""
-        result = []
-        for part in self.parts:
-            result.append(unicode(part))
-        if not result:
+    def _set_value(self, value):
+        """Set values into the slice."""
+        self.parts = []
+        for part in value.split(','):
+            if part.find("/") > 0 or part.find("-") > 0 or part == '*':
+                self.parts.append( self.get_range( part ) )
+            else:
+                try:
+                    self.parts.append( self._v(part) )
+                except:
+                    raise ValueError('Unknown cron time part for %s: %s' % (
+                        self.name, part))
+
+    def render(self, resolve=False):
+        """Return the slice rendered as a crontab.
+
+        resolve - return integer values instead of enums (default False)
+
+        """
+        if len(self.parts) == 0:
             return '*'
-        return ','.join(result)
+        return _render_values(self.parts, ',', resolve)
+
+    def __repr__(self):
+        return "<CronSlice '%s'>" % str(self)
+
+    def __eq__(self, value):
+        return str(self) == str(value)
 
     def __str__(self):
         return self.__unicode__()
@@ -385,14 +401,16 @@ class CronSlice(object):
     def every(self, n_value):
         """Set the every X units value"""
         self.parts = [ self.get_range( int(n_value) ) ]
+        return self.parts[0]
 
     def on(self, *n_value):
         """Set the on the time value."""
-        self.parts += n_value
+        for av in n_value:
+            self.parts += self._v(av),
 
     def during(self, vfrom, vto):
         """Set the During value, which sets a range"""
-        self.parts.append(self.get_range(vfrom, vto))
+        self.parts.append(self.get_range(self._v(vfrom), self._v(vto)))
         return self.parts[-1]
 
     def clear(self):
@@ -402,6 +420,61 @@ class CronSlice(object):
     def get_range(self, *vrange):
         """Return a cron range for this slice"""
         return CronRange( self, *vrange )
+
+    def _v(self, v):
+        """Support wrapper for enumerations and check for range"""
+        try:
+            out = CronValue(v, self.enum)
+        except ValueError:
+            raise ValueError("Unrecognised value '%s' for '%s'" % (v, self.name))
+        except KeyError:
+            raise KeyError("No enumeration for '%s' found '%s'" % (self.name, v))
+
+        if out < self.min and out > self.max:
+            raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
+                str(value), self.min, self.max, self.name))
+        return out
+
+
+class CronValue(object):
+    """Returns a value as int (pass-through) or a special enum value"""
+    def __new__(cls, value, enums):
+        if isinstance(value, int):
+            return value
+        elif str(value).isdigit():
+            return int(str(value))
+        if not enums:
+            raise KeyError("No enumeration allowed")
+        return object.__new__(cls, str(value), enums)
+
+    def __init__(self, value, enums): # throws ValueError
+        self.enum = value
+        self.value = enums.index(value.lower())
+
+    def __cmp__(self, value):
+        return cmp(self.value, value)
+    def __repr__(self):
+        return str(self)
+    def __str__(self):
+        return self.enum
+    def __int__(self):
+        return self.value
+
+
+def _render_values(values, sep=',', resolve=False):
+    """Returns a rendered list, sorted and optionally resolved"""
+    if len(values) > 1:
+        values.sort()
+    return sep.join([ _render(val, resolve) for val in values ])
+
+def _render(value, resolve=False):
+    """Return a single value rendered"""
+    if isinstance(value, CronRange):
+        return value.render(resolve)
+    if resolve:
+        return str(int(value))
+    return str(value)
+
 
 
 class CronRange(object):
@@ -414,7 +487,7 @@ class CronRange(object):
             self.all()
         elif isinstance(vrange[0], basestring):
             self.parse(vrange[0])
-        elif isinstance(vrange[0], int):
+        elif isinstance(vrange[0], int) or isinstance(vrange[0], CronValue):
             if len(vrange) == 2:
                 (self.vfrom, self.vto) = vrange
             else:
@@ -428,8 +501,8 @@ class CronRange(object):
             self.seq = int(seq)
         if value.find('-') > 0:
             vfrom, vto = value.split('-')
-            self.vfrom = self.clean_value(vfrom)
-            self.vto  = self.clean_value(vto)
+            self.vfrom = self.slice._v(vfrom)
+            self.vto  = self.slice._v(vto)
         elif value == '*':
             self.all()
         else:
@@ -440,29 +513,16 @@ class CronRange(object):
         self.vfrom = self.slice.min
         self.vto  = self.slice.max
 
-    def render(self):
+    def render(self, resolve=False):
         """Render the ranged value for a cronjob"""
         value = '*'
         if self.vfrom > self.slice.min or self.vto < self.slice.max:
-            value = "%d-%d" % (self.vfrom, self.vto)
+            value = _render_values([self.vfrom, self.vto], '-', resolve)
         if self.seq != 1:
             value += "/%d" % self.seq
-        if value != '*' and COMPATIBILITY:
+        if value != '*' and self.slice.compat:
             value = ','.join(map(str, range(self.vfrom, self.vto+1, self.seq)))
         return value
-
-    def clean_value(self, value):
-        """Return a cleaned value of the ranged value"""
-        if self.slice.enum and str(value).lower() in self.slice.enum:
-            value = self.slice.enum.index(str(value).lower())
-        try:
-            value = int(value)
-            if value >= self.slice.min and value <= self.slice.max:
-                return value
-        except ValueError:
-            pass
-        raise ValueError("Invalid range value '%s', expected %d-%d for %s" % (
-            str(value), self.slice.min, self.slice.max, self.slice.name))
 
     def every(self, value):
         """Set the sequence value for this range."""
