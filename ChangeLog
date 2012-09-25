@@ -1,3 +1,20 @@
+python-crontab (1.2.0) precise; urgency=low
+
+  * Add test for enums (MON-SUN/JAN-DEC)
+  * Fix problems with enums
+  * Make sure enums are preserved
+  * Sort output for ranges and parts
+  * Allow compatability mode to be set when creating crontab object
+  * Allow tabs and tabfiles to be specified for opening
+
+ -- Martin Owens (DoctorMO) <doctormo@gmail.com>  Thu, 19 Sep 2012 12:12:31 -0400
+
+python-crontab (1.1.0) precise; urgency=low
+
+  * Add Python3 support and make sure it all works for both 2.7 and 3.2
+
+ -- Martin Owens (DoctorMO) <doctormo@gmail.com>  Thu, 19 Sep 2012 12:12:31 -0400
+
 python-crontab (1.0.0) precise; urgency=low
 
   * Add many tests to complete the functionality

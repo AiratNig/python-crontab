@@ -109,7 +109,7 @@ class CronTab(object):
 
     user    - Set the user of the crontab (defaults to $USER)
     tab     - Use a string variable as the crontab instead of installed crontab
-    tabfile - Use
+    tabfile - Use a file for the crontab instead of installed crontab
     compat  - Force disable some features for SunOS (automatic).
 
     """
@@ -118,12 +118,13 @@ class CronTab(object):
         self.root  = ( os.getuid() == 0 )
         self.lines = None
         self.crons = None
+        self.filen = None
         # Detect older unixes and help them out.
         self.compat = compat or os.uname()[0] == "SunOS"
         self.intab = tab
-        self.read()
+        self.read(tabfile)
 
-    def read(self):
+    def read(self, filename=None):
         """
         Read in the crontab from the system into the object, called
         automatically when listing or using the object. use for refresh.
@@ -132,6 +133,10 @@ class CronTab(object):
         self.lines = []
         if self.intab:
           lines = self.intab.split('\n')
+        elif filename:
+          self.filen = filename
+          with open(filename, 'r') as fhl:
+              lines = fhl.readlines()
         else:
           lines = os.popen(self._read_execute()).readlines()
         for line in lines:
@@ -142,20 +147,31 @@ class CronTab(object):
             else:
                 self.lines.append(line.replace('\n',''))
 
-    def write(self):
+    def write(self, filename=None):
         """Write the crontab to the system. Saves all information."""
+        if filename:
+            self.filen = filename
+
         # Add to either the crontab or the internal tab.
         if self.intab != None:
           self.intab = self.render()
-          return
+          # And that's it if we never saved to a file
+          if not self.filen:
+              return
 
-        filed, path = tempfile.mkstemp()
-        fileh = os.fdopen(filed, 'w')
+        if self.filen:
+            fileh = open(self.filen, 'w')
+        else:
+            filed, path = tempfile.mkstemp()
+            fileh = os.fdopen(filed, 'w')
+
         fileh.write(self.render())
         fileh.close()
-        # Add the entire crontab back to the user crontab
-        os.system(self._write_execute(path))
-        os.unlink(path)
+
+        if not self.filen:
+            # Add the entire crontab back to the user crontab
+            os.system(self._write_execute(path))
+            os.unlink(path)
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
@@ -372,7 +388,7 @@ class CronSlice(object):
             else:
                 try:
                     self.parts.append( self._v(part) )
-                except:
+                except ValueError:
                     raise ValueError('Unknown cron time part for %s: %s' % (
                         self.name, part))
 
@@ -430,7 +446,7 @@ class CronSlice(object):
         except KeyError:
             raise KeyError("No enumeration for '%s' found '%s'" % (self.name, v))
 
-        if out < self.min and out > self.max:
+        if int(out) < self.min and int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
                 str(value), self.min, self.max, self.name))
         return out
@@ -451,8 +467,8 @@ class CronValue(object):
         self.enum = value
         self.value = enums.index(value.lower())
 
-    def __cmp__(self, value):
-        return cmp(self.value, value)
+    def __lt__(self, value):
+        return self.value < int(value)
     def __repr__(self):
         return str(self)
     def __str__(self):
@@ -516,7 +532,7 @@ class CronRange(object):
     def render(self, resolve=False):
         """Render the ranged value for a cronjob"""
         value = '*'
-        if self.vfrom > self.slice.min or self.vto < self.slice.max:
+        if int(self.vfrom) > self.slice.min or int(self.vto) < self.slice.max:
             value = _render_values([self.vfrom, self.vto], '-', resolve)
         if self.seq != 1:
             value += "/%d" % self.seq
@@ -527,6 +543,12 @@ class CronRange(object):
     def every(self, value):
         """Set the sequence value for this range."""
         self.seq = int(value)
+
+    def __lt__(self, value):
+        return int(self.vfrom) < int(value)
+
+    def __int__(self):
+        return int(self.vfrom)
 
     def __str__(self):
         return self.__unicode__()
