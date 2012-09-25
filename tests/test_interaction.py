@@ -32,16 +32,6 @@ try:
 except ImportError:
     from test import support as test_support
 
-INITAL_TAB = """
-# First Comment
-*/30 * * * * firstcommand
-* 10-20/3 * * * range
-# Middle Comment
-* * * 10 * byweek
- 00 5  *   *   *      spaced
-@reboot rebooted
-# Last Comment"""
-
 COMMANDS = [
     'firstcommand',
     'range',
@@ -50,8 +40,7 @@ COMMANDS = [
     'rebooted',
 ]
 
-RESULT_TAB = """
-# First Comment
+RESULT_TAB = """# First Comment
 */30 * * * * firstcommand
 * 10-20/3 * * * range
 # Middle Comment
@@ -64,16 +53,13 @@ RESULT_TAB = """
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(tab=INITAL_TAB)
+        self.crontab = CronTab(tabfile='test.tab')
 
     def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""
-        self.assertEqual(self.crontab.intab, INITAL_TAB,
-            "Inital values are set currently")
-        self.crontab.write()
         results = RESULT_TAB.split('\n')
         line_no = 0
-        for line in self.crontab.intab.split('\n'):
+        for line in self.crontab.lines:
             self.assertEqual(line, results[line_no])
             line_no += 1
 
@@ -140,6 +126,12 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(job.render(), '* * * * * seq')
         job.hour.during(2, 10).every(4)
         self.assertEqual(job.render(), '* 2-10/4 * * * seq')
+
+    def test_08_write(self):
+        """Write CronTab to file"""
+        self.crontab.write('output.tab')
+        self.assertTrue(os.path.exists('output.tab'))
+        os.unlink('output.tab')
 
 
 if __name__ == '__main__':
