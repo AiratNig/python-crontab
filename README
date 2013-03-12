@@ -90,7 +90,7 @@ Iterate through all jobs::
 Iterate through all lines::
 
     for line in cron.lines:
-        print job
+        print line
 
 Remove Items::
 
