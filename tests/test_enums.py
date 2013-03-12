@@ -36,18 +36,23 @@ INITAL_TAB = """
 * * * JAN     SAT          enums
 * * * APR-MAR *            ranges
 * * * *       MON,FRI,WED  multiples
+* * * *       *            com1 # Comment One
+* * * *       *            com2 # Comment One
 """
 
 COMMANDS = [
     'enums',
     'ranges',
     'multiples',
+    'com1', 'com2',
 ]
 
 RESULT_TAB = """
 * * * JAN SAT enums
 * * * MAR-APR * ranges
 * * * * MON,WED,FRI multiples
+* * * * * com1 # Comment One
+* * * * * com2 # Comment One
 """
 
 class BasicTestCase(unittest.TestCase):
@@ -104,6 +109,12 @@ class BasicTestCase(unittest.TestCase):
         job.month.on('NOV','JAN')
         self.assertEqual(job, '* * * JAN,APR,NOV * new3')
 
+    def test_08_find_comment(self):
+        """Comment Set"""
+        jobs = self.crontab.find_comment('Comment One')
+        self.assertEqual(len(jobs), 2)
+        for job in jobs:
+            self.assertEqual(job.meta(), 'Comment One')
 
 if __name__ == '__main__':
     test_support.run_unittest(

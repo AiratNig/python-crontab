@@ -44,8 +44,8 @@ RESULT_TAB = """# First Comment
 */30 * * * * firstcommand
 * 10-20/3 * * * range
 # Middle Comment
-* * * 10 * byweek
-0 5 * * * spaced
+* * * 10 * byweek # Comment One
+0 5 * * * spaced # Comment  Two
 @reboot rebooted
 # Last Comment
 """
@@ -106,6 +106,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(job.render(), '* * * * * clear')
 
     def test_07_range(self):
+        """Render Time Ranges"""
         job = self.crontab.new(command='range')
         job.minute.during(4,10)
         self.assertEqual(job.render(), '4-10 * * * * range')
@@ -117,6 +118,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(job.render(), '15-19 * * * * range')
 
     def test_08_sequence(self):
+        """Render Time Sequences""" 
         job = self.crontab.new(command='seq')
         job.hour.every(4)
         self.assertEqual(job.render(), '* */4 * * * seq')
@@ -127,7 +129,12 @@ class BasicTestCase(unittest.TestCase):
         job.hour.during(2, 10).every(4)
         self.assertEqual(job.render(), '* 2-10/4 * * * seq')
 
-    def test_08_write(self):
+    def test_10_comment(self):
+        """Render cron Comments"""
+        job = self.crontab.new(command='com', comment='I love this')
+        self.assertEqual(unicode(job), '* * * * * com # I love this')
+
+    def test_20_write(self):
         """Write CronTab to file"""
         self.crontab.write('output.tab')
         self.assertTrue(os.path.exists('output.tab'))

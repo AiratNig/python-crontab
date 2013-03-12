@@ -2,7 +2,7 @@
 */30 * * * * firstcommand
 * 10-20/3 * * * range
 # Middle Comment
-* * * 10 * byweek
- 00 5  *   *   *      spaced
+* * * 10 * byweek # Comment One
+ 00 5  *   *   *      spaced    # Comment  Two
 @reboot rebooted
 # Last Comment

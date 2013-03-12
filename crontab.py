@@ -1,5 +1,5 @@
 #
-# Copyright 2012, Martin Owens <doctormo@gmail.com>
+# Copyright 2013, Martin Owens <doctormo@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -45,7 +45,10 @@ sys.stdout.write(str(cron.render()))
 for job4 in cron.find_command('echo'):
     sys.stdout.write(job4)
 
-for job5 in cron:
+for job5 in cron.find_comment('SomeID'):
+    sys.stdout.write(job5)
+
+for job6 in cron:
     sys.stdout.write(job5)
 
 cron.remove_all('echo')
@@ -56,7 +59,8 @@ cron.write()
 import os, re, sys
 import tempfile
 
-__version__ = '1.2'
+__pkgname__ = 'python-crontab'
+__version__ = '1.3'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -131,7 +135,7 @@ class CronTab(object):
         """
         self.crons = []
         self.lines = []
-        if self.intab:
+        if self.intab != None:
           lines = self.intab.split('\n')
         elif filename:
           self.filen = filename
@@ -204,6 +208,14 @@ class CronTab(object):
         result = []
         for cron in self.crons:
             if cron.command.match(command):
+                result.append(cron)
+        return result
+
+    def find_comment(self, comment):
+        """Return a list of crons using the comment field."""
+        result = []
+        for cron in self.crons:
+            if cron.meta() == comment:
                 result.append(cron)
         return result
 
@@ -311,7 +323,6 @@ class CronItem(object):
         if self.meta():
             result += " # " + self.meta()
         return result
-
 
     def meta(self, value=None):
         """Return or set the meta value to replace the set values"""
@@ -578,5 +589,5 @@ class CronCommand(object):
 
     def __unicode__(self):
         """Return unicode command line value"""
-        return self.command()
+        return self.command().strip()
 

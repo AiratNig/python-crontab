@@ -18,7 +18,7 @@
 #
 
 from distutils.core import setup
-from crontab import __version__
+from crontab import __version__, __pkgname__
 import os
 
 # remove MANIFEST. distutils doesn't properly update it when the contents of directories change.
@@ -29,7 +29,7 @@ with open('README') as fhl:
     description = fhl.read()
 
 setup(
-        name             = 'python-crontab',
+        name             = __pkgname__,
         version          = __version__,
         description      = 'Python Crontab API',
         long_description = description,
