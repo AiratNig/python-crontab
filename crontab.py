@@ -475,7 +475,7 @@ class CronSlice(object):
 
         if int(out) < self.min and int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
-                str(value), self.min, self.max, self.name))
+                str(v), self.min, self.max, self.name))
         return out
 
 
