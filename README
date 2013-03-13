@@ -65,7 +65,12 @@ Creating a job with a comment::
 Disabled or Enable Job::
 
     job.enable()
-    jon.enable(False)
+    job.enable(False)
+    False == job.is_enabled()
+
+Validity Check::
+
+    True == job.is_valid()
 
 Use a special syntax::
 

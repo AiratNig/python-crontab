@@ -42,6 +42,8 @@ job3.minute.every(1)
 
 sys.stdout.write(str(cron.render()))
 
+job3.enable(False)
+
 for job4 in cron.find_command('echo'):
     sys.stdout.write(job4)
 
