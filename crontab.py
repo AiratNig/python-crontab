@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Rewritten from scratch, but based on the code from gnome-schedual by:
+# Rewritten from scratch, but based on the code from gnome-schedule by:
 # - Philip Van Hoof <me at pvanhoof dot be>
 # - Gaute Hope <eg at gaute dot vetsj dot com>
 # - Kristof Vansant <de_lupus at pandora dot be>
@@ -62,7 +62,7 @@ import os, re, sys
 import tempfile
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.3'
+__version__ = '1.3.2'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
