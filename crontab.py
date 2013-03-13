@@ -306,12 +306,16 @@ class CronItem(object):
             self.enabled = enabled
         return self.enabled
 
+    def is_enabled(self):
+        """Return true if this job is enabled (not commented out)"""
+        return self.enabled
+
     def is_valid(self):
-        """Return true if this slice set is valid"""
+        """Return true if this job is valid"""
         return self.valid
 
     def render(self):
-        """Render this set slice to a string"""
+        """Render this set cron-job to a string"""
         time = ''
         if not self.special:
             slices = []

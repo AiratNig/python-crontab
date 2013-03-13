@@ -62,6 +62,11 @@ Creating a job with a comment::
 
     job = cron.new(command='/foo/bar',comment='SomeID')
 
+Disabled or Enable Job::
+
+    job.enable()
+    jon.enable(False)
+
 Use a special syntax::
 
     job.every_reboot()
