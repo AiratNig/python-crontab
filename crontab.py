@@ -181,11 +181,6 @@ class CronTab(object):
         """Render this crontab as it would be in the crontab."""
         crons = []
         for cron in self.lines:
-            if type(cron) == CronItem and not cron.is_valid():
-                crons.append("# " + unicode(cron))
-                sys.stderr.write(
-                    "Ignoring invalid crontab line `%s`\n" % str(cron))
-                continue
             crons.append(unicode(cron))
         result = '\n'.join(crons)
         if result and result[-1] not in [ '\n', '\r' ]:
@@ -258,19 +253,23 @@ class CronItem(object):
     """
     def __init__(self, line=None, command='', meta='', compat=False):
         self.valid = False
+        self.enabled = True
         self.slices  = []
         self.special = False
         self.compat  = compat
         self.set_slices()
         self._meta   = meta
         if line:
-            self.parse(line)
+            self.parse(line.strip())
         elif command:
             self.command = CronCommand(unicode(command))
             self.valid = True
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
+        if line[0] == '#':
+            self.enabled = False
+            line = line[1:].strip()
         result = ITEMREX.findall(line)
         if result:
             o_value = result[0]
@@ -301,6 +300,12 @@ class CronItem(object):
                 CronSlice(compat=self.compat, value=o_value[i_value],
                     **S_INFO[i_value]))
 
+    def enable(self, enabled=True):
+        """Set if this cron job is enabled or not"""
+        if enabled in [True, False]:
+            self.enabled = enabled
+        return self.enabled
+
     def is_valid(self):
         """Return true if this slice set is valid"""
         return self.valid
@@ -322,6 +327,8 @@ class CronItem(object):
         result = "%s %s" % (time, unicode(self.command))
         if self.meta():
             result += " # " + self.meta()
+        if not self.enabled:
+            result = "# " + result
         return result
 
     def meta(self, value=None):
@@ -375,6 +382,9 @@ class CronItem(object):
         return self.__unicode__()
 
     def __unicode__(self):
+        if not self.is_valid():
+            sys.stderr.write("Ignoring invalid crontab line\n")
+            return "# " + unicode(self.render())
         return self.render()
 
 

@@ -36,6 +36,7 @@ COMMANDS = [
     'firstcommand',
     'range',
     'byweek',
+    'disabled',
     'spaced',
     'rebooted',
 ]
@@ -45,6 +46,7 @@ RESULT_TAB = """# First Comment
 * 10-20/3 * * * range
 # Middle Comment
 * * * 10 * byweek # Comment One
+# * * * * * disabled
 0 5 * * * spaced # Comment  Two
 @reboot rebooted
 # Last Comment
@@ -133,6 +135,21 @@ class BasicTestCase(unittest.TestCase):
         """Render cron Comments"""
         job = self.crontab.new(command='com', comment='I love this')
         self.assertEqual(unicode(job), '* * * * * com # I love this')
+
+    def test_11_disabled(self):
+        """Disabled Job"""
+        jobs = self.crontab.find_command('firstcommand')
+        self.assertTrue(jobs[0].enabled)
+        jobs = self.crontab.find_command('disabled')
+        self.assertFalse(jobs[0].enabled)
+
+    def test_12_disable(self):
+        """Disable and Enable Job"""
+        job = self.crontab.new(command='dis')
+        job.enable(False)
+        self.assertEqual(unicode(job), '# * * * * * dis')
+        job.enable()
+        self.assertEqual(unicode(job), '* * * * * dis')
 
     def test_20_write(self):
         """Write CronTab to file"""
