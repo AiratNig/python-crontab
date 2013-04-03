@@ -5,12 +5,12 @@
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -469,9 +469,9 @@ class CronSlice(object):
         try:
             out = CronValue(v, self.enum)
         except ValueError:
-            raise ValueError("Unrecognised value '%s' for '%s'" % (v, self.name))
+            raise ValueError("Unrecognised '%s'='%s'" % (self.name, v))
         except KeyError:
-            raise KeyError("No enumeration for '%s' found '%s'" % (self.name, v))
+            raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
 
         if int(out) < self.min and int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
@@ -585,7 +585,7 @@ class CronRange(object):
 
 
 class CronCommand(object):
-    """Reprisent a cron command as an object."""
+    """Represent a cron command as an object."""
     def __init__(self, line):
         self._command = line
 
