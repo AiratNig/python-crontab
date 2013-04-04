@@ -269,7 +269,7 @@ class CronItem(object):
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
-        if line[0] == '#':
+        if not line or line[0] == '#':
             self.enabled = False
             line = line[1:].strip()
         result = ITEMREX.findall(line)
