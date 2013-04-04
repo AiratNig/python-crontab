@@ -42,6 +42,7 @@ COMMANDS = [
 ]
 
 RESULT_TAB = """# First Comment
+# Edit this line to test for mistaken checks
 */30 * * * * firstcommand
 * 10-20/3 * * * range
 # Middle Comment

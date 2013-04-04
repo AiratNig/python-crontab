@@ -277,8 +277,12 @@ class CronItem(object):
             o_value = result[0]
             self.command = CronCommand(o_value[5])
             self._meta   = o_value[7]
-            self.set_slices( o_value )
-            self.valid = True
+            try:
+                self.set_slices( o_value )
+            except KeyError:
+                self.enabled = False
+            else:
+                self.valid = True
         elif line.find('@') < line.find('#') or line.find('#')==-1:
             result = SPECREX.findall(line)
             if result and result[0][0] in SPECIALS:
