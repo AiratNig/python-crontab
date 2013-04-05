@@ -111,6 +111,8 @@ S_INFO = [
 # Detect Python3
 import platform
 py3 = platform.python_version()[0] == '3'
+WinOS = platform.system() == 'Windows'
+SunOS = not WinOS and os.uname()[0] == "SunOS"
 
 if py3:
     unicode = str
@@ -143,12 +145,13 @@ class CronTab(object):
     """
     def __init__(self, user=None, tab=None, tabfile=None, compat=False):
         self.user  = user
-        self.root  = ( os.getuid() == 0 )
         self.lines = None
         self.crons = None
         self.filen = None
+        # Protect windows users
+        self.root  = not WinOS and os.getuid() == 0
         # Detect older unixes and help them out.
-        self.compat = compat or os.uname()[0] == "SunOS"
+        self.compat = compat or SunOS
         self.intab = tab
         self.read(tabfile)
 
