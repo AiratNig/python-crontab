@@ -57,7 +57,7 @@ cron.remove_all('echo')
 cron.remove_all('/foo/bar')
 cron.write()
 
-# Croniter Extentions allow you to ask for the schedualed job times, make
+# Croniter Extentions allow you to ask for the scheduled job times, make
 # sure you have croniter installed, it's not a hard dependancy.
 
 job3.schedule().get_next()
@@ -108,11 +108,11 @@ S_INFO = [
     { 'name' : 'Day of Week',  'max_v' : 7,  'min_v' : 0, 'enum' : WEEK_ENUM },
 ]
 
-# Detect Python3
+# Detect Python3 and which OS for temperments.
 import platform
 py3 = platform.python_version()[0] == '3'
 WinOS = platform.system() == 'Windows'
-SunOS = not WinOS and os.uname()[0] == "SunOS"
+SunOS = not WinOS and (os.uname()[0] == "SunOS" or os.getenv('SunOS_TEST'))
 
 if py3:
     unicode = str
@@ -132,6 +132,7 @@ try:
 except ImportError:
     croniter = None
 
+from cronlog import CronLog
 
 class CronTab(object):
     """
@@ -140,20 +141,20 @@ class CronTab(object):
     user    - Set the user of the crontab (defaults to $USER)
     tab     - Use a string variable as the crontab instead of installed crontab
     tabfile - Use a file for the crontab instead of installed crontab
-    compat  - Force disable some features for SunOS (automatic).
+    log     - Filename for logfile instead of /var/log/syslog
 
     """
-    def __init__(self, user=None, tab=None, tabfile=None, compat=False):
-        self.user  = user
+    def __init__(self, user=None, tab=None, tabfile=None, log=None):
         self.lines = None
         self.crons = None
         self.filen = None
         # Protect windows users
         self.root  = not WinOS and os.getuid() == 0
+        self.user  = user
         # Detect older unixes and help them out.
-        self.compat = compat or SunOS
         self.intab = tab
         self.read(tabfile)
+        self.log = CronLog(log, user=self.user or 'root')
 
     def read(self, filename=None):
         """
@@ -171,7 +172,7 @@ class CronTab(object):
         else:
           lines = os.popen(self._read_execute()).readlines()
         for line in lines:
-            cron = CronItem(line, compat=self.compat)
+            cron = CronItem(line, cron=self)
             if cron.is_valid():
                 self.crons.append(cron)
                 self.lines.append(cron)
@@ -220,7 +221,7 @@ class CronTab(object):
 
         Returns the new CronItem object.
         """
-        item = CronItem(command=command, meta=comment, compat=self.compat)
+        item = CronItem(command=command, meta=comment, cron=self)
         self.crons.append(item)
         self.lines.append(item)
         return item
@@ -278,14 +279,17 @@ class CronItem(object):
     An item which objectifies a single line of a crontab and
     May be considered to be a cron job object.
     """
-    def __init__(self, line=None, command='', meta='', compat=False):
+    def __init__(self, line=None, command='', meta='', cron=None):
         self.valid = False
         self.enabled = True
         self.slices  = []
         self.special = False
-        self.compat  = compat
-        self.set_slices()
+        self.cron  = cron
+
         self._meta   = meta
+        self._log    = None
+
+        self.set_slices()
         if line and line.strip():
             self.parse(line.strip())
         elif command:
@@ -309,6 +313,7 @@ class CronItem(object):
             else:
                 self.valid = True
         elif line.find('@') < line.find('#') or line.find('#')==-1:
+
             result = SPECREX.findall(line)
             if result and result[0][0] in SPECIALS:
                 o_value = result[0]
@@ -328,7 +333,7 @@ class CronItem(object):
             if not o_value:
                 o_value = [None, None, None, None, None]
             self.slices.append(
-                CronSlice(compat=self.compat, value=o_value[i_value],
+                CronSlice(job=self, value=o_value[i_value],
                     **S_INFO[i_value]))
 
     def enable(self, enabled=True):
@@ -391,6 +396,13 @@ class CronItem(object):
                          " python module via pip or your package manager")
 
     @property
+    def log(self):
+        """Return a cron log specific for this job only"""
+        if not self._log and self.cron:
+            self._log = self.cron.log.for_program(self.command)
+        return self._log
+
+    @property
     def minute(self):
         """Return the minute slice"""
         return self.slices[0]
@@ -433,13 +445,13 @@ class CronItem(object):
 
 class CronSlice(object):
     """Cron slice object which shows a time pattern"""
-    def __init__(self, name, min_v, max_v, enum=None, value=None, compat=False):
-        self.name   = name
-        self.min    = min_v
-        self.max    = max_v
-        self.enum   = enum
-        self.compat = compat
-        self.parts  = []
+    def __init__(self, name, min_v, max_v, enum=None, value=None, job=None):
+        self.name  = name
+        self.min   = min_v
+        self.max   = max_v
+        self.job   = job
+        self.enum  = enum
+        self.parts = []
         if value:
             self._set_value(value)
 
@@ -562,6 +574,7 @@ class CronRange(object):
     def __init__(self, vslice, *vrange):
         self.slice = vslice
         self.seq   = 1
+        self.cron  = None
 
         if not vrange:
             self.all()
@@ -600,7 +613,7 @@ class CronRange(object):
             value = _render_values([self.vfrom, self.vto], '-', resolve)
         if self.seq != 1:
             value += "/%d" % self.seq
-        if value != '*' and self.slice.compat:
+        if value != '*' and SunOS:
             value = ','.join(map(str, range(self.vfrom, self.vto+1, self.seq)))
         return value
 

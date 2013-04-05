@@ -1,9 +1,8 @@
 import glob
 import unittest
 
-test_file_strings = glob.glob('test_*.py')
-module_strings = [str[0:len(str)-3] for str in test_file_strings]
-suites = [unittest.defaultTestLoader.loadTestsFromName(str) for str
-          in module_strings]
+test_files = glob.glob('test_*.py')
+modules = [s[:-3] for s in test_files if 'compat' not in s]
+suites = [unittest.defaultTestLoader.loadTestsFromName(s) for s in modules]
 testSuite = unittest.TestSuite(suites)
 text_runner = unittest.TextTestRunner().run(testSuite)

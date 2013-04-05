@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2009 Martin Owens
+# Copyright (C) 2011 Martin Owens
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

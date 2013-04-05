@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2009 Martin Owens
+# Copyright (C) 2013 Martin Owens
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,6 +58,10 @@ class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
         self.crontab = CronTab(tabfile='test.tab')
+
+    def test_00_root(self):
+        """Not Root User"""
+        self.assertFalse(self.crontab.root)
 
     def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""

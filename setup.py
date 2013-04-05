@@ -39,7 +39,7 @@ setup(
         author_email     = 'doctormo@gmail.com',
         platforms        = 'linux',
         license          = 'GPLv3',
-        py_modules       = [ 'crontab' ],
-        provides         = [ 'crontab' ],
+        py_modules       = [ 'crontab', 'cronlog' ],
+        provides         = [ 'crontab', 'cronlog' ],
     )
 

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2009 Martin Owens
+# Copyright (C) 2012 Martin Owens
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,10 @@ import os
 import sys
 
 sys.path.insert(0, '../')
+os.environ['SunOS_TEST'] = 'True'
 
 import unittest
-from crontab import CronTab
+from crontab import CronTab, SunOS
 try:
     from test import test_support
 except ImportError:
@@ -40,7 +41,11 @@ INITAL_TAB = """
 class CompatTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(tab=INITAL_TAB, compat=True)
+        self.crontab = CronTab(tab=INITAL_TAB)
+
+    def test_00_enabled(self):
+        """Test Compatability Mode"""
+        self.assertTrue(SunOS)
 
     def test_01_addition(self):
         """New Job Rendering"""
