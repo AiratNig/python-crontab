@@ -56,13 +56,22 @@ for job6 in cron:
 cron.remove_all('echo')
 cron.remove_all('/foo/bar')
 cron.write()
+
+# Croniter Extentions allow you to ask for the schedualed job times, make
+# sure you have croniter installed, it's not a hard dependancy.
+
+job3.schedule().get_next()
+job3.schedule().get_prev()
+
 """
 
 import os, re, sys
 import tempfile
 
+from datetime import datetime
+
 __pkgname__ = 'python-crontab'
-__version__ = '1.3.2'
+__version__ = '1.4'
 
 CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
@@ -107,6 +116,19 @@ if py3:
     unicode = str
     basestring = str
 
+try:
+    # Croniter is an optional import
+    from croniter import croniter as _croniter
+    class croniter(_croniter):
+        """Same as normal croniter, but always return datetime objects"""
+        def get_next(self, type_ref=datetime):
+            return _croniter.get_next(self, type_ref)
+        def get_prev(self, type_ref=datetime):
+            return _croniter.get_prev(self, type_ref)
+        def get_current(self, type_ref=datetime):
+            return _croniter.get_current(self, type_ref)
+except ImportError:
+    croniter = None
 
 
 class CronTab(object):
@@ -261,7 +283,7 @@ class CronItem(object):
         self.compat  = compat
         self.set_slices()
         self._meta   = meta
-        if line:
+        if line and line.strip():
             self.parse(line.strip())
         elif command:
             self.command = CronCommand(unicode(command))
@@ -320,14 +342,13 @@ class CronItem(object):
         """Return true if this job is valid"""
         return self.valid
 
+    def render_time(self):
+        return ' '.join([ unicode(self.slices[i]) for i in range(0, 5) ])
+
     def render(self):
         """Render this set cron-job to a string"""
-        time = ''
-        if not self.special:
-            slices = []
-            for i in range(0, 5):
-                slices.append(unicode(self.slices[i]))
-            time = ' '.join(slices)
+        time = self.render_time()
+
         if self.special or time in SPECIALS.values():
             if self.special:
                 time = self.special
@@ -356,6 +377,15 @@ class CronItem(object):
         self.special = None
         for slice_v in self.slices:
             slice_v.clear()
+
+    def schedule(self, date_from=None):
+        """Return a croniter schedule is available."""
+        if not date_from:
+            date_from = datetime.now()
+        if croniter:
+            return croniter(self.render_time(), date_from)
+        raise ImportError("Croniter is not available. Please install croniter"+\
+                         " python module via pip or your package manager")
 
     @property
     def minute(self):

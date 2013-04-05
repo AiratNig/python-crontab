@@ -115,9 +115,36 @@ Write CronTab to new filename::
 
     cron.write( 'output.tab' )
 
+Extra Functionality
+===================
+
+If you have the croniter python module installed, you will have access to a
+schedule on each job. For example if you want to know when a job will next run:
+
+    schedule = job.schedule(date_from=datetime.now())
+
+This creates a schedule croniter based on the job from the time specified. The
+default date_from is the current date/time if not specified. Next we can get
+the datetime of the next job:
+
+    datetime = schedule.get_next()
+
+Or the previous:
+
+    datetime = schedule.get_prev()
+
+The get methods work in the same way as the default croniter, except that they
+will return datetime objects by default instead of floats. If you want the
+original functionality, pass float into the method when calling:
+
+    datetime = schedule.get_current(float)
+
+If you don't have the croniter module installed, you'll get an ImportError when
+you first try using the schedule function on your cron job object.
 
 Extra Support
 =============
 
  - Support for SunOS with compatability mode
  - Python 3.2 and Python 2.7 tested
+ - Windows support works for manual crontabs only
