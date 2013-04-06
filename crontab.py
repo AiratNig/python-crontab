@@ -23,7 +23,8 @@ EXAMPLE_USE = """
 from crontab import CronTab
 import sys
 
-cron = CronTab()
+# Create a new non-installed crontab
+cron = CronTab(tab='')
 job  = cron.new(command='/usr/bin/echo')
 
 job.minute.during(5,50).every(5)
@@ -67,13 +68,14 @@ job3.schedule().get_prev()
 
 import os, re, sys
 import tempfile
+import subprocess as sp
 
 from datetime import datetime
+from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
 __version__ = '1.4'
 
-CRONCMD = "/usr/bin/crontab"
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
 SPECREX = re.compile('@(\w+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -113,6 +115,9 @@ import platform
 py3 = platform.python_version()[0] == '3'
 WinOS = platform.system() == 'Windows'
 SunOS = not WinOS and (os.uname()[0] == "SunOS" or os.getenv('SunOS_TEST'))
+CRONCMD = "/usr/bin/crontab"
+if sys.argv[0].startswith('test_'):
+    CRONCMD = './crontest'
 
 if py3:
     unicode = str
@@ -132,7 +137,6 @@ try:
 except ImportError:
     croniter = None
 
-from cronlog import CronLog
 
 class CronTab(object):
     """
@@ -170,13 +174,15 @@ class CronTab(object):
         self.crons = []
         self.lines = []
         if self.intab != None:
-          lines = self.intab.split('\n')
+            lines = self.intab.split('\n')
         elif filename:
-          self.filen = filename
-          with open(filename, 'r') as fhl:
-              lines = fhl.readlines()
+            self.filen = filename
+            with open(filename, 'r') as fhl:
+                lines = fhl.readlines()
         else:
-          lines = os.popen(self._read_execute()).readlines()
+            p = sp.Popen(self._read_execute(), stdout=sp.PIPE)
+            (out, err) = p.communicate()
+            lines = out.split("\n")
         for line in lines:
             cron = CronItem(line, cron=self)
             if cron.is_valid():
@@ -208,7 +214,7 @@ class CronTab(object):
 
         if not self.filen:
             # Add the entire crontab back to the user crontab
-            os.system(self._write_execute(path))
+            sp.Popen(self._write_execute(path)).wait()
             os.unlink(path)
 
     def render(self):
@@ -261,17 +267,17 @@ class CronTab(object):
 
     def _read_execute(self):
         """Returns the command line for reading a crontab"""
-        return "%s -l%s" % (CRONCMD, self._user_execute())
+        return [ CRONCMD, '-l' ] + self._user_execute()
 
     def _write_execute(self, path):
         """Return the command line for writing a crontab"""
-        return "%s %s%s" % (CRONCMD, path, self._user_execute())
+        return [ CRONCMD, path ] + self._user_execute()
 
     def _user_execute(self):
         """User command switches to append to the read and write commands."""
         if self.user:
-            return ' -u %s' % str(self.user)
-        return ''
+            return [ '-u', str(self.user) ]
+        return []
 
     def __iter__(self):
         return self.crons.__iter__()

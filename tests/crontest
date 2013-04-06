@@ -1,0 +1,10 @@
+#!/usr/bin/python
+
+import os
+import sys
+
+if sys.argv[1] == '-l':
+    fhl = open('basic.tab', 'r')
+    print fhl.read()
+
+sys.exit(0)

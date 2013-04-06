@@ -33,21 +33,25 @@ try:
 except ImportError:
     from test import support as test_support
 
-INITAL_TAB = ''
-
 class DummyStdout(object):
     def write(self, text):
         pass
 
+BASIC = '@hourly firstcommand\n\n'
+
 class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
+    def test_01_basic(self):
+        """Open system crontab"""
+        cron = CronTab()
+        self.assertEqual(cron.render(), BASIC)
+
     def test_03_usage(self):
         """Dont modify crontab"""
-        cron = CronTab(tab=INITAL_TAB)
         sys.stdout = DummyStdout()
         exec(EXAMPLE_USE)
         sys.stdout = sys.__stdout__
-        self.assertEqual(cron.render(), INITAL_TAB)
+        self.assertEqual(cron.render(), '')
 
 if __name__ == '__main__':
     test_support.run_unittest(
