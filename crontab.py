@@ -154,7 +154,13 @@ class CronTab(object):
         # Detect older unixes and help them out.
         self.intab = tab
         self.read(tabfile)
-        self.log = CronLog(log, user=self.user or 'root')
+        self._log = log
+
+    @property
+    def log(self):
+        if self._log == None or isinstance(self._log, basestring):
+            self._log = CronLog(self._log, user=self.user or 'root')
+        return self._log
 
     def read(self, filename=None):
         """

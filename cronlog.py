@@ -20,6 +20,8 @@ import re
 import sys
 import string
 
+from dateutil import parser as dateparse
+
 MATCHER = r'(?P<date>\w+ +\d+ +\d\d:\d\d:\d\d) (?P<host>\w+) CRON\[(?P<pid>\d+)\]: \((?P<user>\w+)\) CMD \((?P<cmd>.*)\)'
 
 def size(filename):
@@ -41,7 +43,6 @@ class LogReader(object):
         # Always seek to the end of the file, this accounts for file updates
         # that happen during our running process.
         self.size = size(self.filename)
-        print "File Size: %d" % self.size
         block_num = 0
         location  = self.size
         halfline  = ''
@@ -52,14 +53,20 @@ class LogReader(object):
                 location = 0
             self.pipe.seek(location)
             data = unicode(self.pipe.read(self.mass) + halfline).split('\n')
-            halfline = data.pop(0)
+            if location != 0:
+                halfline = data.pop(0)
             loc = location + self.mass
             data.reverse()
             for line in data:
+                if line.strip() == '':
+                    continue
                 yield (loc, line)
                 loc -= len(line)
 
-from dateutil import parser as dateparse
+    def __iter__(self):
+        for (offset, line) in self.readlines():
+            yield line
+
 
 class CronLog(LogReader):
     def __init__(self, filename=None, user=None):
@@ -75,7 +82,7 @@ class CronLog(LogReader):
         for (offset, line) in self.readlines():
             c = re.match(MATCHER, unicode(line))
             datum = c and c.groupdict()
-            if datum and datum['user'] == self.user:
+            if datum and (not self.user or datum['user'] == self.user):
                 datum['date'] = dateparse.parse(datum['date'])
                 yield datum
 

@@ -1,5 +1,5 @@
-Apr  4 21:24:01 servername CRON[16489]: (root) CMD (rootscript &> /dev/null)
 Apr  4 21:24:01 servername CRON[16490]: (user) CMD (userscript &> /dev/null)
+Apr  4 21:24:01 servername CRON[16489]: (root) CMD (rootscript &> /dev/null)
 Apr  4 21:24:01 servername CRON[16487]: (CRON) info (Cron information item)
 Apr  4 21:25:01 servername CRON[16496]: (user) CMD (userscript &> /dev/null)
 Apr  4 21:25:01 servername CRON[16497]: (root) CMD (shadowscript &> /dev/null)
