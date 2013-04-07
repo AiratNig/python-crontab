@@ -41,5 +41,20 @@ setup(
         license          = 'GPLv3',
         py_modules       = [ 'crontab', 'cronlog' ],
         provides         = [ 'crontab', 'cronlog' ],
+        classifiers      = [
+             'Development Status :: 5 - Production/Stable',
+             'Development Status :: 6 - Mature',
+             'Intended Audience :: Developers',
+             'Intended Audience :: Information Technology',
+             'Intended Audience :: System Administrators',
+             'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+             'Operating System :: POSIX',
+             'Operating System :: POSIX :: Linux',
+             'Operating System :: POSIX :: SunOS/Solaris',
+             'Programming Language :: Python',
+             'Programming Language :: Python :: 2.6',
+             'Programming Language :: Python :: 2.7',
+             'Programming Language :: Python :: 3.2',
+        ]
     )
 

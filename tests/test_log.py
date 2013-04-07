@@ -76,12 +76,12 @@ READ_LINE = [ 'The End', 'Sickem', '2', '9', 'First Line' ]
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(tab=INITAL_TAB, log='test.log')
+        self.crontab = CronTab(tab=INITAL_TAB, log='data/test.log')
 
     def test_00_logreader(self):
         """Log Reader"""
         lines = READ_LINE[:]
-        reader = LogReader('basic.log')
+        reader = LogReader('data/basic.log')
         for line in reader:
             self.assertEqual(line.strip(), lines.pop(0))
 
@@ -95,7 +95,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_02_cronlog(self):
         """Cron Log Items"""
-        entries = list(CronLog('test.log'))
+        entries = list(CronLog('data/test.log'))
         self.assertEqual(len(entries), 19)
         self.assertEqual(entries[0]['pid'], "16592")
         self.assertEqual(entries[3]['pid'], "16574")

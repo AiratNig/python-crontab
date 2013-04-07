@@ -4,7 +4,7 @@ import os
 import sys
 
 if sys.argv[1] == '-l':
-    fhl = open('basic.tab', 'r')
+    fhl = open('data/basic.tab', 'r')
     print fhl.read()
 
 sys.exit(0)

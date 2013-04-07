@@ -7,4 +7,4 @@ include setup.py
 include crontab.py
 include cronlog.py
 include tests/*.py
-include tests/test.*
+include tests/data/*

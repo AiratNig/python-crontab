@@ -117,7 +117,7 @@ WinOS = platform.system() == 'Windows'
 SunOS = not WinOS and (os.uname()[0] == "SunOS" or os.getenv('SunOS_TEST'))
 CRONCMD = "/usr/bin/crontab"
 if sys.argv[0].startswith('test_'):
-    CRONCMD = './crontest'
+    CRONCMD = './data/crontest'
 
 if py3:
     unicode = str

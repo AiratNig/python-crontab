@@ -115,8 +115,27 @@ Write CronTab to new filename::
 
     cron.write( 'output.tab' )
 
-Extra Functionality
-===================
+Log Functionality
+=================
+
+The log functionality will read a cron log backwards to find you the last run
+instances of your crontab and cron jobs.
+
+The crontab will limit the returned entries to the user the crontab is for.
+
+    cron = CronTab(user='root')
+
+    for d in cron.log:
+        print d['pid'] + " - " + d['date']
+
+Each job can return a log iterator too, these are filtered so you can see when
+the last execution was.
+
+    for d in cron.find_command('echo')[0].log:
+        print d['pid'] + " - " + d['date']
+
+Schedule Functionality
+======================
 
 If you have the croniter python module installed, you will have access to a
 schedule on each job. For example if you want to know when a job will next run:
@@ -145,6 +164,6 @@ you first try using the schedule function on your cron job object.
 Extra Support
 =============
 
- - Support for SunOS with compatability mode
+ - Support for SunOS with compatibility mode
  - Python 3.2 and Python 2.7 tested
  - Windows support works for manual crontabs only

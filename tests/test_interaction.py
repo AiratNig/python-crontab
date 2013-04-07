@@ -57,7 +57,7 @@ RESULT_TAB = """# First Comment
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(tabfile='test.tab')
+        self.crontab = CronTab(tabfile='data/test.tab')
 
     def test_00_root(self):
         """Not Root User"""
