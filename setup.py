@@ -41,7 +41,7 @@ setup(
     license          = 'GPLv3',
     py_modules       = [ 'crontab', 'cronlog' ],
     provides         = [ 'crontab', 'cronlog' ],
-    install_requires = [ 'dateutil' ],
+    install_requires = [ 'python-dateutil' ],
     extras_require   = { 'cron-schedule': ['croniter'] },
     classifiers      = [
       'Development Status :: 5 - Production/Stable',
