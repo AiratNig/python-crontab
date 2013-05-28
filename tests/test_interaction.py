@@ -50,6 +50,8 @@ RESULT_TAB = """# First Comment
 * * * 10 * byweek # Comment One
 # * * * * * disabled
 0 5 * * * spaced # Comment  Two
+
+
 @reboot rebooted
 # Last Comment
 """
@@ -163,6 +165,17 @@ class BasicTestCase(unittest.TestCase):
         self.assertTrue(os.path.exists('output.tab'))
         os.unlink('output.tab')
 
+    def test_21_multiuse(self):
+        """Multiple Renderings"""
+        cron = '# start of tab'
+        for i in range(10):
+            crontab = CronTab(tab=cron)
+            job = crontab.new(command='multi')
+            cron = unicode(crontab)
+            crontab = CronTab(tab=cron)
+            crontab.find_command('multi')[0].delete()
+            cron = unicode(crontab)
+        self.assertEqual(unicode(crontab), '# start of tab\n')
 
 if __name__ == '__main__':
     test_support.run_unittest(

@@ -262,6 +262,9 @@ class CronTab(object):
 
     def remove(self, item):
         """Remove a selected cron from the crontab."""
+        # The last item often has a trailing line feed
+        if self.crons[-1] == item and self.lines[-1] == '':
+            self.lines.remove(self.lines[-1])
         self.crons.remove(item)
         self.lines.remove(item)
 
@@ -307,6 +310,12 @@ class CronItem(object):
         elif command:
             self.command = CronCommand(unicode(command))
             self.valid = True
+
+    def delete(self):
+        if not self.cron:
+            sys.stderr.write("Cron item is not associated with a crontab!\n")
+        else:
+            self.cron.remove(self)
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""

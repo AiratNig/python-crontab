@@ -82,7 +82,7 @@ class BasicTestCase(unittest.TestCase):
         e = self.crontab.find_command('ranges')[0]
         self.assertEqual(e.month, 'MAR-APR')
         self.assertEqual(e.month.render(True), '3-4' )
- 
+
     def test_04_sets(self):
         """Enumeration Sets"""
         e = self.crontab.find_command('multiples')[0]
