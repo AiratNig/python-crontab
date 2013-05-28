@@ -180,7 +180,7 @@ class CronTab(object):
             with open(filename, 'r') as fhl:
                 lines = fhl.readlines()
         else:
-            p = sp.Popen(self._read_execute(), stdout=sp.PIPE)
+            p = sp.Popen(self._read_execute(), stdout=sp.PIPE, stderr=sp.PIPE)
             (out, err) = p.communicate()
             lines = out.split("\n")
         for line in lines:
