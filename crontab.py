@@ -74,7 +74,7 @@ from datetime import datetime
 from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.4.1'
+__version__ = '1.4.2'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
