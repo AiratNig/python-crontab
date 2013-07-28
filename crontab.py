@@ -74,7 +74,7 @@ from datetime import datetime
 from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -125,7 +125,7 @@ if py3:
 
 try:
     # Croniter is an optional import
-    from croniter import croniter as _croniter
+    from croniter.croniter import croniter as _croniter
     class croniter(_croniter):
         """Same as normal croniter, but always return datetime objects"""
         def get_next(self, type_ref=datetime):
@@ -182,7 +182,7 @@ class CronTab(object):
         else:
             p = sp.Popen(self._read_execute(), stdout=sp.PIPE, stderr=sp.PIPE)
             (out, err) = p.communicate()
-            lines = out.split("\n")
+            lines = out.decode('utf-8').split("\n")
         for line in lines:
             cron = CronItem(line, cron=self)
             if cron.is_valid():
@@ -288,6 +288,9 @@ class CronTab(object):
     def __unicode__(self):
         return self.render()
 
+    def __str__(self):
+        return self.render()
+
 
 class CronItem(object):
     """
@@ -382,7 +385,9 @@ class CronItem(object):
             if self.special:
                 time = self.special
             else:
-                time = "@%s" % SPECIALS.keys()[SPECIALS.values().index(time)]
+                for (name, value) in SPECIALS.items():
+                    if value == time:
+                        time = "@%s" % name
 
         result = "%s %s" % (time, unicode(self.command))
         if self.meta():
@@ -537,7 +542,7 @@ class CronSlice(object):
     def _v(self, v):
         """Support wrapper for enumerations and check for range"""
         try:
-            out = CronValue(v, self.enum)
+            out = get_cronvalue(v, self.enum)
         except ValueError:
             raise ValueError("Unrecognised '%s'='%s'" % (self.name, v))
         except KeyError:
@@ -549,18 +554,20 @@ class CronSlice(object):
         return out
 
 
-class CronValue(object):
+def get_cronvalue(value, enums):
     """Returns a value as int (pass-through) or a special enum value"""
-    def __new__(cls, value, enums):
-        if isinstance(value, int):
-            return value
-        elif str(value).isdigit():
-            return int(str(value))
-        if not enums:
-            raise KeyError("No enumeration allowed")
-        return object.__new__(cls, str(value), enums)
+    if isinstance(value, int):
+        return value
+    elif str(value).isdigit():
+        return int(str(value))
+    if not enums:
+        raise KeyError("No enumeration allowed")
+    return CronValue(str(value), enums)
 
-    def __init__(self, value, enums): # throws ValueError
+
+class CronValue(object):
+    """Represent a special value in the cron line"""
+    def __init__(self, value, enums):
         self.enum = value
         self.value = enums.index(value.lower())
 
@@ -662,9 +669,7 @@ class CronCommand(object):
 
     def match(self, command):
         """Match the command given"""
-        if command in self._command:
-            return True
-        return False
+        return command in self._command
 
     def command(self):
         """Return the command line"""
@@ -672,6 +677,8 @@ class CronCommand(object):
 
     def __str__(self):
         """Return a string as a value"""
+        # TODO: encode with the system's default encoding?
+        # i.e. locale.getpreferredencoding()
         return self.__unicode__()
 
     def __unicode__(self):

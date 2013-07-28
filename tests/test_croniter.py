@@ -46,18 +46,18 @@ class BasicTestCase(unittest.TestCase):
 
     def test_01_schedule(self):
         """Get Scheduler"""
-        ct = self.job.schedule(datetime(2009, 10, 11, 05, 12, 10))
+        ct = self.job.schedule(datetime(2009, 10, 11, 5, 12, 10))
         self.assertTrue(ct)
 
     def test_02_next(self):
         """Get Next Scheduled Items"""
-        ct = self.job.schedule(datetime(2000, 10, 11, 05, 12, 10))
-        self.assertEqual(ct.get_next(), datetime(2000, 10, 11, 05, 20, 0))
-        self.assertEqual(ct.get_next(), datetime(2000, 10, 11, 06, 20, 0))
+        ct = self.job.schedule(datetime(2000, 10, 11, 5, 12, 10))
+        self.assertEqual(ct.get_next(), datetime(2000, 10, 11, 5, 20, 0))
+        self.assertEqual(ct.get_next(), datetime(2000, 10, 11, 6, 20, 0))
 
     def test_02_prev(self):
         """Get Prev Scheduled Items"""
-        ct = self.job.schedule(datetime(2001, 10, 11, 01, 12, 10))
+        ct = self.job.schedule(datetime(2001, 10, 11, 1, 12, 10))
         self.assertEqual(ct.get_prev(), datetime(2001, 10, 11, 0, 20, 0))
         self.assertEqual(ct.get_prev(), datetime(2001, 10, 10, 23, 20, 0))
 

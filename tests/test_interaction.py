@@ -26,11 +26,14 @@ import sys
 sys.path.insert(0, '../')
 
 import unittest
-from crontab import CronTab
+from crontab import CronTab, py3
 try:
     from test import test_support
 except ImportError:
     from test import support as test_support
+
+if py3:
+    unicode = str
 
 COMMANDS = [
     'firstcommand',

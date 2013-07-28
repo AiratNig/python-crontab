@@ -34,7 +34,6 @@ try:
 except ImportError:
     from test import support as test_support
 
-
 INITAL_TAB = """
 * * * * * userscript &> /dev/null
 * * * * * rootscript &> /dev/null

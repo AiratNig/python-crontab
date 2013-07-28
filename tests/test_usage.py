@@ -39,6 +39,9 @@ class DummyStdout(object):
 
 BASIC = '@hourly firstcommand\n\n'
 
+def flush():
+    pass
+
 class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
     def test_01_basic(self):
@@ -48,7 +51,9 @@ class UseTestCase(unittest.TestCase):
 
     def test_03_usage(self):
         """Dont modify crontab"""
+        cron = CronTab(tab='')
         sys.stdout = DummyStdout()
+        sys.stdout.flush = flush
         exec(EXAMPLE_USE)
         sys.stdout = sys.__stdout__
         self.assertEqual(cron.render(), '')

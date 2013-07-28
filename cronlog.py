@@ -19,10 +19,16 @@ import os
 import re
 import sys
 import string
+import platform
+
+py3 = platform.python_version()[0] == '3'
+if py3:
+    unicode = str
 
 from dateutil import parser as dateparse
 
-MATCHER = r'(?P<date>\w+ +\d+ +\d\d:\d\d:\d\d) (?P<host>\w+) CRON\[(?P<pid>\d+)\]: \((?P<user>\w+)\) CMD \((?P<cmd>.*)\)'
+MATCHER = r'(?P<date>\w+ +\d+ +\d\d:\d\d:\d\d) (?P<host>\w+) ' + \
+        r'CRON\[(?P<pid>\d+)\]: \((?P<user>\w+)\) CMD \((?P<cmd>.*)\)'
 
 def size(filename):
     return os.stat(filename)[6]
@@ -31,7 +37,10 @@ class LogReader(object):
     """Opens a Log file, reading backwards and watching for changes"""
     def __init__(self, filename, mass=4096):
         self.filename = filename
-        self.pipe     = open(filename, 'rb')
+        if py3:
+            self.pipe = open(filename, 'r', encoding='utf-8')
+        else:
+            self.pipe = open(filename, 'r')
         self.mass     = mass
         self.size     = -1
         self.read     = -1
@@ -52,7 +61,8 @@ class LogReader(object):
             if location < 0:
                 location = 0
             self.pipe.seek(location)
-            data = unicode(self.pipe.read(self.mass) + halfline).split('\n')
+            data = self.pipe.read(self.mass) + halfline
+            data = data.strip().split('\n')
             if location != 0:
                 halfline = data.pop(0)
             loc = location + self.mass
