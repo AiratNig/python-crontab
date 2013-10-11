@@ -52,7 +52,12 @@ for job5 in cron.find_comment('SomeID'):
     sys.stdout.write(job5)
 
 for job6 in cron:
-    sys.stdout.write(job5)
+    sys.stdout.write(job6)
+
+for job7 in cron:
+    job7.every(3).hours()
+    sys.stdout.write(job7)
+    job7.every().dow()
 
 cron.remove_all('echo')
 cron.remove_all('/foo/bar')
@@ -74,7 +79,7 @@ from datetime import datetime
 from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.4.3'
+__version__ = '1.4.4'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -310,6 +315,7 @@ class CronItem(object):
         self.set_slices()
         if line and line.strip():
             self.parse(line.strip())
+
         elif command:
             self.command = CronCommand(unicode(command))
             self.valid = True
@@ -403,8 +409,14 @@ class CronItem(object):
         return self._meta
 
     def every_reboot(self):
-        """Set to every reboot instead of a time pattern"""
+        """Set to every reboot instead of a time pattern: @reboot"""
         self.special = '@reboot'
+
+    def every(self, unit=1):
+        """Replace existing time pattern with a single unit, setting all lower
+        units to '0'. For instance job.every(3).days() will be `0 0 */3 * *`
+        while job.day().every(3) would be `* * */3 * *`."""
+        return SimpleItemInterface(self, unit)
 
     def clear(self):
         """Clear the special and set values"""
@@ -434,9 +446,19 @@ class CronItem(object):
         return self.slices[0]
 
     @property
+    def minutes(self):
+        """Same as minute"""
+        return self.minute
+
+    @property
     def hour(self):
         """Return the hour slice"""
         return self.slices[1]
+
+    @property
+    def hours(self):
+        """Same as hour"""
+        return self.hour
 
     @property
     def dom(self):
@@ -447,6 +469,11 @@ class CronItem(object):
     def month(self):
         """Return the month slice"""
         return self.slices[3]
+
+    @property
+    def months(Self):
+        """Same as month"""
+        return self.month
 
     @property
     def dow(self):
@@ -467,6 +494,30 @@ class CronItem(object):
             sys.stderr.write("Ignoring invalid crontab line\n")
             return "# " + unicode(self.render())
         return self.render()
+
+
+class SimpleItemInterface(object):
+    """Provide an interface to the job.every() method:
+        Available Calls:
+          minute, minutes, hour, hours, dom, doms, month, months, dow, dows
+
+       Once run all units will be cleared (set to *) then proceeding units
+       will be set to '0' and the target unit will be set as every x units.
+    """
+    def __init__(self, item, units):
+        self.job = item
+        self.unit = units
+        for (x, i) in enumerate(['minute', 'hour', 'dom', 'month', 'dow']):
+            setattr(self, i, self._set(x))
+            setattr(self, i+'s', self._set(x))
+
+    def _set(self, target):
+        def innercall():
+            self.job.clear()
+            for p in range(target == 4 and 2 or target):
+                self.job.slices[p].on(0)
+            self.job.slices[target].every(self.unit)
+        return innercall
 
 
 class CronSlice(object):
