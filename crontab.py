@@ -79,7 +79,7 @@ import subprocess as sp
 from datetime import datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.5'
+__version__ = '1.5.1'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -344,7 +344,6 @@ class CronItem(object):
             else:
                 self.valid = True
         elif line.find('@') < line.find('#') or line.find('#')==-1:
-
             result = SPECREX.findall(line)
             if result and result[0][0] in SPECIALS:
                 o_value = result[0]
@@ -382,21 +381,24 @@ class CronItem(object):
         return self.valid
 
     def render_time(self):
+        """Return just numbered parts of this crontab"""
         return ' '.join([ unicode(self.slices[i]) for i in range(0, 5) ])
 
-    def render(self):
-        """Render this set cron-job to a string"""
+    def render_schedule(self):
+        """Return just the first part of a cron job (the numbers or specials)"""
         time = self.render_time()
-
         if self.special or (time in SPECIALS.values() and not SystemV):
             if self.special:
-                time = self.special
+                return self.special
             else:
                 for (name, value) in SPECIALS.items():
                     if value == time:
-                        time = "@%s" % name
+                        return "@%s" % name
+        return time
 
-        result = "%s %s" % (time, unicode(self.command))
+    def render(self):
+        """Render this set cron-job to a string"""
+        result = "%s %s" % (self.render_schedule(), unicode(self.command))
         if self.meta():
             result += " # " + self.meta()
         if not self.enabled:
@@ -411,12 +413,20 @@ class CronItem(object):
 
     def every_reboot(self):
         """Set to every reboot instead of a time pattern: @reboot"""
+        self.clear()
         self.special = '@reboot'
 
     def every(self, unit=1):
-        """Replace existing time pattern with a single unit, setting all lower
-        units to '0'. For instance job.every(3).days() will be `0 0 */3 * *`
-        while job.day().every(3) would be `* * */3 * *`."""
+        """
+        Replace existing time pattern with a single unit, setting all lower
+        units to first value in valid range.
+
+        For instance job.every(3).days() will be `0 0 */3 * *`
+        while job.day().every(3) would be `* * */3 * *`
+
+        Many of these patterns exist as special tokens on Linux, such as
+        `@midnight` and `@hourly`
+        """
         return SimpleItemInterface(self, unit)
 
     def clear(self):
@@ -515,10 +525,19 @@ class SimpleItemInterface(object):
     def _set(self, target):
         def innercall():
             self.job.clear()
+            # Day-of-week is actually a level 2 set, not level 4.
             for p in range(target == 4 and 2 or target):
-                self.job.slices[p].on(0)
+                self.job.slices[p].on('<')
             self.job.slices[target].every(self.unit)
         return innercall
+
+    def year(self):
+        """Special every year target"""
+        if self.unit > 1:
+            raise ValueError("Invalid value '%s', " % self.unit + \
+                             "job may only be in '1' year.")
+        self.job.clear()
+        self.job.special = '@yearly'
 
 
 class CronSlice(object):
@@ -608,6 +627,10 @@ class CronSlice(object):
 
     def _v(self, v):
         """Support wrapper for enumerations and check for range"""
+        if v == '>':
+            v = self.max
+        elif v == '<':
+            v = self.min
         try:
             out = get_cronvalue(v, self.enum)
         except ValueError:
@@ -615,7 +638,7 @@ class CronSlice(object):
         except KeyError:
             raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
 
-        if int(out) < self.min and int(out) > self.max:
+        if int(out) < self.min or int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
                 str(v), self.min, self.max, self.name))
         return out

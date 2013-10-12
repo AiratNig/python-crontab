@@ -68,7 +68,7 @@ class EveryTestCase(unittest.TestCase):
         """Every Month"""
         for job in self.crontab:
             job.every(3).months()
-            self.assertEqual(job.render_time(), '0 0 0 */3 *')
+            self.assertEqual(job.render_time(), '0 0 1 */3 *')
 
     def test_05_dow(self):
         """Every Day of the Week"""
@@ -76,7 +76,20 @@ class EveryTestCase(unittest.TestCase):
             job.every(3).dow()
             self.assertEqual(job.render_time(), '0 0 * * */3')
 
+    def test_06_year(self):
+        """Every Year"""
+        for job in self.crontab:
+            job.every().year()
+            self.assertEqual(job.render_schedule(), '@yearly')
+            self.assertEqual(job.render_time(), '* * * * *')
+            self.assertRaises(ValueError, job.every(2).year)
 
+    def test_07_reboot(self):
+        """Every Reboot"""
+        for job in self.crontab:
+            job.every_reboot()
+            self.assertEqual(job.render_schedule(), '@reboot')
+            self.assertEqual(job.render_time(), '* * * * *')
 
 if __name__ == '__main__':
     test_support.run_unittest(

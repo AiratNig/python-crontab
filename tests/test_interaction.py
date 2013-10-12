@@ -184,7 +184,25 @@ class BasicTestCase(unittest.TestCase):
             cron = unicode(crontab)
         self.assertEqual(unicode(crontab), '# start of tab\n')
 
-    def test_specials(self):
+    def test_22_min(self):
+        """Minimum Field Values"""
+        job = self.crontab.new(command='min')
+        job.minute.on('<')
+        job.hour.on('<')
+        job.dom.on('<')
+        job.month.on('<')
+        self.assertEqual(unicode(job), '@yearly min')
+
+    def test_23_max(self):
+        """Maximum Field Values"""
+        job = self.crontab.new(command='max')
+        job.minute.on('>')
+        job.hour.on('>')
+        job.dom.on('>')
+        job.month.on('>')
+        self.assertEqual(unicode(job), '59 23 31 12 * max')
+
+    def test_24_specials(self):
         """Specials Conversion"""
         tab = CronTab(tabfile='data/specials.tab')
         self.assertEqual(tab.render(), """@hourly hourly\n@midnight daily\n@weekly weekly\n""")

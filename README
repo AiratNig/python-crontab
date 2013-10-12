@@ -13,19 +13,25 @@ Description
 Crontab module for read and writing crontab files and accessing the system cron
 automatically and simply using a direct API.
 
-Comparing the `below chart <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_ you will note that W, L, # and ? symbols are not supported.
+Comparing the `below chart <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_
+you will note that W, L, # and ? symbols are not supported as they are not
+standard Linux or SystemV crontab format.
 
-============= =========== ================= ===========================
-Field Name    Mandatory   Allowed Values    Allowed Special Characters
-============= =========== ================= ===========================
-Minutes       Yes         0-59              \* / , -
-Hours         Yes         0-23              \* / , -
-Day of month  Yes         1-31              \* / , -
-Month         Yes         1-12 or JAN-DEC   \* / , -
-Day of week   Yes         0-6 or SUN-SAT    \* / , -
-============= =========== ================= ===========================
+============= =========== ================= =================== =============
+Field Name    Mandatory   Allowed Values    Special Characters  Extra Values
+============= =========== ================= =================== =============
+Minutes       Yes         0-59              \* / , -             < >
+Hours         Yes         0-23              \* / , -             < >
+Day of month  Yes         1-31              \* / , -             < >
+Month         Yes         1-12 or JAN-DEC   \* / , -             < >
+Day of week   Yes         0-6 or SUN-SAT    \* / , -             < >
+============= =========== ================= =================== =============
 
-Supported special cases allow crontab lines to not use fields. These are the supported aliases:
+Extra Values are '<' for minimum value, such as 0 for minutes or 1 for months.
+And '>' for maximum value, such as 24 for hours or 12 for months.
+
+Supported special cases allow crontab lines to not use fields.
+These are the supported aliases which are not available in SystemV mode:
 
 =========== ===========
 Case        Meaning
@@ -141,16 +147,16 @@ Proceeding Unit Confusion
 =========================
 
 It is sometimes logical to think that job.hour.every(2) will set all proceeding
-units to '0' and thus result in "0 \*/2 * * \*". Instead you are controlling only
-the hours units and the minute column is unaffected. The real result would be
-"\* \*/2 * * \*" and maybe unexpected to those unfamiliar with crontabs.
+units to '0' and thus result in "0 \*/2 * * \*". Instead you are controlling
+only the hours units and the minute column is unaffected. The real result would
+be "\* \*/2 * * \*" and maybe unexpected to those unfamiliar with crontabs.
 
 There is a special 'every' method on a job to clear the job's existing schedule
 and replace it with a simple single unit::
 
     job.every(4).hours()  == '0 */4 * * *'
     job.every().dom()     == '0 0 * * *'
-    job.every(2).months() == '0 0 0 * *'
+    job.every().month()   == '0 0 0 * *'
     job.every(2).dows()   == '0 0 * * */2'
 
 This is a convenience method only, it does normal things with the existing api.
@@ -161,7 +167,7 @@ Log Functionality
 The log functionality will read a cron log backwards to find you the last run
 instances of your crontab and cron jobs.
 
-The crontab will limit the returned entries to the user the crontab is for.
+The crontab will limit the returned entries to the user the crontab is for::
 
     cron = CronTab(user='root')
 
@@ -169,7 +175,7 @@ The crontab will limit the returned entries to the user the crontab is for.
         print d['pid'] + " - " + d['date']
 
 Each job can return a log iterator too, these are filtered so you can see when
-the last execution was.
+the last execution was::
 
     for d in cron.find_command('echo')[0].log:
         print d['pid'] + " - " + d['date']
@@ -178,23 +184,23 @@ Schedule Functionality
 ======================
 
 If you have the croniter python module installed, you will have access to a
-schedule on each job. For example if you want to know when a job will next run:
+schedule on each job. For example if you want to know when a job will next run::
 
     schedule = job.schedule(date_from=datetime.now())
 
 This creates a schedule croniter based on the job from the time specified. The
 default date_from is the current date/time if not specified. Next we can get
-the datetime of the next job:
+the datetime of the next job::
 
     datetime = schedule.get_next()
 
-Or the previous:
+Or the previous::
 
     datetime = schedule.get_prev()
 
 The get methods work in the same way as the default croniter, except that they
 will return datetime objects by default instead of floats. If you want the
-original functionality, pass float into the method when calling:
+original functionality, pass float into the method when calling::
 
     datetime = schedule.get_current(float)
 
