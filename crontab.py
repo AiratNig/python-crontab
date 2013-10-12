@@ -77,7 +77,6 @@ import tempfile
 import subprocess as sp
 
 from datetime import datetime
-from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
 __version__ = '1.5'
@@ -168,6 +167,7 @@ class CronTab(object):
 
     @property
     def log(self):
+        from cronlog import CronLog
         if self._log == None or isinstance(self._log, basestring):
             self._log = CronLog(self._log, user=self.user or 'root')
         return self._log
