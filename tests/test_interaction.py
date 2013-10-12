@@ -184,6 +184,11 @@ class BasicTestCase(unittest.TestCase):
             cron = unicode(crontab)
         self.assertEqual(unicode(crontab), '# start of tab\n')
 
+    def test_specials(self):
+        """Specials Conversion"""
+        tab = CronTab(tabfile='data/specials.tab')
+        self.assertEqual(tab.render(), """@hourly hourly\n@midnight daily\n@weekly weekly\n""")
+
 if __name__ == '__main__':
     test_support.run_unittest(
        BasicTestCase,

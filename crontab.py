@@ -119,7 +119,7 @@ S_INFO = [
 import platform
 py3 = platform.python_version()[0] == '3'
 WinOS = platform.system() == 'Windows'
-SunOS = not WinOS and (os.uname()[0] == "SunOS" or os.getenv('SunOS_TEST'))
+SystemV = not WinOS and (os.uname()[0] in ["SunOS","AIX","HP-UX"] or os.getenv('SystemV_TEST'))
 CRONCMD = "/usr/bin/crontab"
 if sys.argv[0].startswith('test_'):
     CRONCMD = './data/crontest'
@@ -388,7 +388,7 @@ class CronItem(object):
         """Render this set cron-job to a string"""
         time = self.render_time()
 
-        if self.special or time in SPECIALS.values():
+        if self.special or (time in SPECIALS.values() and not SystemV):
             if self.special:
                 time = self.special
             else:
@@ -708,7 +708,7 @@ class CronRange(object):
             value = _render_values([self.vfrom, self.vto], '-', resolve)
         if self.seq != 1:
             value += "/%d" % self.seq
-        if value != '*' and SunOS:
+        if value != '*' and SystemV:
             value = ','.join(map(str, range(self.vfrom, self.vto+1, self.seq)))
         return value
 

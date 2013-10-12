@@ -24,10 +24,10 @@ import os
 import sys
 
 sys.path.insert(0, '../')
-os.environ['SunOS_TEST'] = 'True'
+os.environ['SystemV_TEST'] = 'True'
 
 import unittest
-from crontab import CronTab, SunOS
+from crontab import CronTab, SystemV
 try:
     from test import test_support
 except ImportError:
@@ -45,7 +45,7 @@ class CompatTestCase(unittest.TestCase):
 
     def test_00_enabled(self):
         """Test Compatability Mode"""
-        self.assertTrue(SunOS)
+        self.assertTrue(SystemV)
 
     def test_01_addition(self):
         """New Job Rendering"""
@@ -64,9 +64,16 @@ class CompatTestCase(unittest.TestCase):
         job.hour.during(2, 10).every(2)
         job.dom.every(10)
 
-
         self.assertNotEqual(job.render(), '4-9 2-10/2 */3 * * addition2')
         self.assertEqual(job.render(), '4,5,6,7,8,9 2,4,6,8,10 1,11,21,31 * * addition2')
+
+    def test_03_specials(self):
+        """Ignore Special Symbols"""
+        tab = CronTab(tabfile='data/specials.tab')
+        self.assertEqual(tab.render(), """0 * * * * hourly
+0 0 * * * daily
+0 0 * * 0 weekly
+""")
 
 
 if __name__ == '__main__':
