@@ -1,7 +1,11 @@
-Bug Reports
-===========
+.. image:: https://launchpadlibrarian.net/134092458/python-cron-192.png
+    :class: floating-box
+    :alt: Python Crontab on Launchpad
 
-Please report any problems to the launchpad bug tracker: https://bugs.launchpad.net/python-crontab
+Bug Reports and Development
+===========================
+
+Please report any problems to the `launchpad bug tracker <https://bugs.launchpad.net/python-crontab>`_. Please use Bazaar and push patches to the `launchpad project code hosting <https://code.launchpad.net/python-crontab>`_.
 
 Description
 ===========
@@ -9,8 +13,7 @@ Description
 Crontab module for read and writing crontab files and accessing the system cron
 automatically and simply using a direct API.
 
-Comparing the below chart to http://en.wikipedia.org/wiki/Cron#CRON_expression
-you will note that W, L, # and ? symbols are not supported.
+Comparing the `below chart <http://en.wikipedia.org/wiki/Cron#CRON_expression>`_ you will note that W, L, # and ? symbols are not supported.
 
 ============= =========== ================= ===========================
 Field Name    Mandatory   Allowed Values    Allowed Special Characters
@@ -125,17 +128,17 @@ Proceeding Unit Confusion
 =========================
 
 It is sometimes logical to think that job.hour.every(2) will set all proceeding
-units to '0' and thus result in "0 \*/2 * * \*". Instead you are controlling
-only the hours units and the minute column is unaffected. The real result would
-be "\* \*/2 * * \*" and maybe unexpected to those unfamiliar with crontabs.
+units to '0' and thus result in "0 \*/2 * * \*". Instead you are controlling only
+the hours units and the minute column is unaffected. The real result would be
+"\* \*/2 * * \*" and maybe unexpected to those unfamiliar with crontabs.
 
 There is a special 'every' method on a job to clear the job's existing schedule
 and replace it with a simple single unit::
 
-    job.every(4).hours()  == '0 *//4 * * *'
+    job.every(4).hours()  == '0 */4 * * *'
     job.every().dom()     == '0 0 * * *'
     job.every(2).months() == '0 0 0 * *'
-    job.every(2).dows()   == '0 0 * * *//2'
+    job.every(2).dows()   == '0 0 * * */2'
 
 This is a convenience method only, it does normal things with the existing api.
 
@@ -189,5 +192,5 @@ Extra Support
 =============
 
  - Support for SunOS with compatibility mode
- - Python 3.2 and Python 2.7 tested
+ - Python 3.2 and Python 2.7/2.6 tested
  - Windows support works for manual crontabs only
