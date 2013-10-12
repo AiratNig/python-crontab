@@ -1,6 +1,6 @@
 .. image:: https://launchpadlibrarian.net/134092458/python-cron-192.png
     :class: floating-box
-    :alt: Python Crontab on Launchpad
+    :alt: Python Crontab Logo
 
 Bug Reports and Development
 ===========================
@@ -43,12 +43,15 @@ Case        Meaning
 How to Use the Module
 =====================
 
-Getting access to a crontab can happen in four ways::
+Getting access to a crontab can happen in four ways, two system methods::
 
     from crontab import CronTab
 
     system_cron = CronTab()
     user_cron = CronTab('root')
+
+And two ways from non-system sources::
+
     file_cron = CronTab(tabfile='filename.tab')
     mem_cron = CronTab(tab="""
       * * * * * command
@@ -66,6 +69,16 @@ And setting the job's time restrictions::
 
     job.dow.on('SUN')
     job.month.during('APR', 'NOV')
+
+Each time restriction will clear the previous restriction::
+
+    job.hour.every(10) # Set to * */10 * * *
+    job.hour.on(2)     # Set to * 2 * * *
+
+Appending restrictions is explicit::
+
+    job.hour.every(10)  # Set to * */10 * * *
+    job.hour.also.on(2) # Set to * 2,*/10 * * *
 
 Creating a job with a comment::
 
@@ -193,4 +206,5 @@ Extra Support
 
  - Support for SunOS with compatibility mode
  - Python 3.2 and Python 2.7/2.6 tested
- - Windows support works for manual crontabs only
+ - Windows support works for non-system crontabs only.
+   ( see mem_cron and file_cron examples above for usage )

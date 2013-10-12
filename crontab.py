@@ -31,7 +31,8 @@ job.minute.during(5,50).every(5)
 job.hour.every(4)
 
 job.dow.on('SUN')
-job.month.during('APR', 'NOV')
+job.month.during('APR', 'JUN')
+job.month.also.during('OCT', 'DEC')
 
 job2 = cron.new(command='/foo/bar',comment='SomeID')
 job2.every_reboot()
@@ -79,7 +80,7 @@ from datetime import datetime
 from cronlog import CronLog
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.4.4'
+__version__ = '1.5'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -567,20 +568,35 @@ class CronSlice(object):
     def __unicode__(self):
         return self.render()
 
-    def every(self, n_value):
+    def every(self, n_value, also=False):
         """Set the every X units value"""
-        self.parts = [ self.get_range( int(n_value) ) ]
-        return self.parts[0]
+        not also and self.clear()
+        self.parts.append( self.get_range( int(n_value) ) )
+        return self.parts[-1]
 
-    def on(self, *n_value):
-        """Set the on the time value."""
+    def on(self, *n_value, **opts):
+        """Set the time values to the specified placements."""
+        not opts.get('also', False) and self.clear()
         for av in n_value:
             self.parts += self._v(av),
+        return self.parts
 
-    def during(self, vfrom, vto):
+    def during(self, vfrom, vto, also=False):
         """Set the During value, which sets a range"""
+        not also and self.clear()
         self.parts.append(self.get_range(self._v(vfrom), self._v(vto)))
         return self.parts[-1]
+
+    @property
+    def also(self):
+        class Also(object):
+            def every(s, *a):
+                return self.every(*a, also=True)
+            def on(s, *a):
+                return self.on(*a, also=True)
+            def during(s, *a):
+                return self.during(*a, also=True)
+        return Also()
 
     def clear(self):
         """clear the slice ready for new vaues"""

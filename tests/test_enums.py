@@ -106,7 +106,7 @@ class BasicTestCase(unittest.TestCase):
         """Created Enum Set"""
         job = self.crontab.new(command='new3')
         job.month.on('APR')
-        job.month.on('NOV','JAN')
+        job.month.also.on('NOV','JAN')
         self.assertEqual(job, '* * * JAN,APR,NOV * new3')
 
     def test_08_find_comment(self):

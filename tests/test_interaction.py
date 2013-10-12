@@ -124,11 +124,13 @@ class BasicTestCase(unittest.TestCase):
         job.minute.during(4,10)
         self.assertEqual(job.render(), '4-10 * * * * range')
         job.minute.during(15,19)
-        self.assertEqual(job.render(), '4-10,15-19 * * * * range')
+        self.assertEqual(job.render(), '15-19 * * * * range')
         job.minute.clear()
         self.assertEqual(job.render(), '* * * * * range')
         job.minute.during(15,19)
         self.assertEqual(job.render(), '15-19 * * * * range')
+        job.minute.also.during(4,10)
+        self.assertEqual(job.render(), '4-10,15-19 * * * * range')
 
     def test_08_sequence(self):
         """Render Time Sequences""" 
@@ -136,11 +138,13 @@ class BasicTestCase(unittest.TestCase):
         job.hour.every(4)
         self.assertEqual(job.render(), '* */4 * * * seq')
         job.hour.during(2, 10)
-        self.assertEqual(job.render(), '* */4,2-10 * * * seq')
+        self.assertEqual(job.render(), '* 2-10 * * * seq')
         job.hour.clear()
         self.assertEqual(job.render(), '* * * * * seq')
         job.hour.during(2, 10).every(4)
         self.assertEqual(job.render(), '* 2-10/4 * * * seq')
+        job.hour.also.during(1, 4)
+        self.assertEqual(job.render(), '* 1-4,2-10/4 * * * seq')
 
     def test_10_comment(self):
         """Render cron Comments"""
