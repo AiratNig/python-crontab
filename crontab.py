@@ -79,7 +79,7 @@ import subprocess as sp
 from datetime import datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -707,17 +707,17 @@ class CronRange(object):
 
     def parse(self, value):
         """Parse a ranged value in a cronjob"""
-        if value.find('/') > 0:
+        if value.count('/') == 1:
             value, seq = value.split('/')
             self.seq = int(seq)
-        if value.find('-') > 0:
+        if value.count('-') == 1:
             vfrom, vto = value.split('-')
             self.vfrom = self.slice._v(vfrom)
             self.vto  = self.slice._v(vto)
         elif value == '*':
             self.all()
         else:
-            raise ValueError('Unknown cron range value %s' % value)
+            raise ValueError('Unknown cron range value "%s"' % value)
 
     def all(self):
         """Set this slice to all units between the miniumum and maximum"""
