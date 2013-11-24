@@ -83,7 +83,7 @@ import subprocess as sp
 from datetime import datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.6'
+__version__ = '1.6.0'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -110,6 +110,7 @@ SPECIALS = {
     "annually": '0 0 1 1 *',
     "midnight": '0 0 * * *'
 }
+SPECIAL_IGNORE = ['midnight', 'annually']
 
 S_INFO = [
     { 'name' : 'Minutes',      'max_v' : 59, 'min_v' : 0 },
@@ -307,6 +308,8 @@ class CronTab(object):
 
     def __unicode__(self):
         return self.render()
+    def __len__(self):
+        return len(self.crons)
 
     def __str__(self):
         return self.render()
@@ -401,13 +404,12 @@ class CronItem(object):
     def render_schedule(self):
         """Return just the first part of a cron job (the numbers or specials)"""
         time = self.render_time()
-        if self.special or (time in SPECIALS.values() and not SystemV):
-            if self.special:
-                return self.special
-            else:
-                for (name, value) in SPECIALS.items():
-                    if value == time:
-                        return "@%s" % name
+        if self.special:
+            return self.special
+        elif not SystemV:
+            for (name, value) in SPECIALS.items():
+                if value == time and name not in SPECIAL_IGNORE:
+                    return "@%s" % name
         return time
 
     def render(self):

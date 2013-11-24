@@ -205,7 +205,7 @@ class BasicTestCase(unittest.TestCase):
     def test_24_specials(self):
         """Specials Conversion"""
         tab = CronTab(tabfile='data/specials.tab')
-        self.assertEqual(tab.render(), """@hourly hourly\n@midnight daily\n@weekly weekly\n""")
+        self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@weekly weekly\n""")
 
     def test_25_setall(self):
         job = self.crontab.new(command='all')

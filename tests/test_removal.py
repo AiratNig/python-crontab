@@ -33,7 +33,7 @@ except ImportError:
     from test import support as test_support
 
 if py3:
-    unicode = len
+    unicode = str
 
 START_TAB = """
 3 * * * * command1 # CommentID C
@@ -48,24 +48,30 @@ class RemovalTestCase(unittest.TestCase):
 
     def test_01_remove(self):
         """Remove Item"""
+        self.assertEqual(len(self.crontab), 3)
         self.crontab.remove( self.crontab.crons[0] )
+        self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 69)
 
     def test_02_remove_all(self):
         """Remove All"""
         self.crontab.remove_all()
+        self.assertEqual(len(self.crontab), 0)
         self.assertEqual(unicode(self.crontab), '')
 
     def test_03_remove_cmd(self):
         """Remove all with Command"""
         self.crontab.remove_all('command2')
+        self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 67)
         self.crontab.remove_all('command3')
+        self.assertEqual(len(self.crontab), 1)
         self.assertEqual(len(self.crontab.render()), 33)
 
     def test_04_remove_id(self):
         """Remove all with Comment/ID"""
         self.crontab.remove_all(comment='CommentID B3')
+        self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 68)
 
 if __name__ == '__main__':
