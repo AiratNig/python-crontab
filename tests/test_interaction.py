@@ -213,6 +213,8 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
         job.setall()
         self.assertEqual(unicode(job), '* * * * * all')
+        job.setall('1 */2 2-4 12 SUN')
+        self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
 
 
 if __name__ == '__main__':

@@ -327,7 +327,7 @@ class CronItem(object):
         self._meta   = meta
         self._log    = None
 
-        self.set_slices()
+        self._set_slices()
         if line and line.strip():
             self.parse(line.strip())
 
@@ -352,7 +352,7 @@ class CronItem(object):
             self.command = CronCommand(o_value[5])
             self._meta   = o_value[7]
             try:
-                self.set_slices( o_value )
+                self._set_slices( o_value )
             except KeyError:
                 self.enabled = False
             else:
@@ -367,10 +367,10 @@ class CronItem(object):
                 if value.find('@') != -1:
                     self.special = value
                 else:
-                    self.set_slices( value.split(' ') )
+                    self._set_slices( value.split(' ') )
                 self.valid = True
 
-    def set_slices(self, o_value=None):
+    def _set_slices(self, o_value=None):
         """Set the values of this slice set"""
         self.slices = []
         for i_value in range(0, 5):
@@ -450,12 +450,13 @@ class CronItem(object):
 
            job.setall(0, 0, None, '>', 'SUN') == '0 0 * 12 SUN'
         """
+        if len(args) == 1 and ' ' in args[0]:
+            return self._set_slices(args[0].split(' '))
         for x, s in enumerate(self.slices):
             if x < len(args) and args[x] != None:
                 s.parse(args[x])
             else:
                 s.clear()
-        return self.render_time()
 
     def clear(self):
         """Clear the special and set values"""

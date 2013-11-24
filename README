@@ -89,6 +89,7 @@ Appending restrictions is explicit::
 Setting all time slices at once::
 
     job.setall(2, 10, '2-4', '*/2', None)
+    job.setall('2 10 * * *')
 
 Creating a job with a comment::
 
