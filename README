@@ -86,6 +86,10 @@ Appending restrictions is explicit::
     job.hour.every(10)  # Set to * */10 * * *
     job.hour.also.on(2) # Set to * 2,*/10 * * *
 
+Setting all time slices at once::
+
+    job.setall(2, 10, '2-4', '*/2', None)
+
 Creating a job with a comment::
 
     job = cron.new(command='/foo/bar',comment='SomeID')
@@ -134,6 +138,11 @@ Remove Items::
 
     cron.remove( job )
     cron.remove_all('echo')
+    cron.remove_all(comment='foo')
+
+Clear entire cron of all jobs::
+
+    cron.remove_all()
 
 Write CronTab back to system or filename::
 

@@ -207,6 +207,14 @@ class BasicTestCase(unittest.TestCase):
         tab = CronTab(tabfile='data/specials.tab')
         self.assertEqual(tab.render(), """@hourly hourly\n@midnight daily\n@weekly weekly\n""")
 
+    def test_25_setall(self):
+        job = self.crontab.new(command='all')
+        job.setall(1, '*/2', '2-4', '>', 'SUN')
+        self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
+        job.setall()
+        self.assertEqual(unicode(job), '* * * * * all')
+
+
 if __name__ == '__main__':
     test_support.run_unittest(
        BasicTestCase,

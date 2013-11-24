@@ -34,6 +34,9 @@ job.dow.on('SUN')
 job.month.during('APR', 'JUN')
 job.month.also.during('OCT', 'DEC')
 
+job.every(2).days()
+job.setall(1, 12, None, None, None)
+
 job2 = cron.new(command='/foo/bar',comment='SomeID')
 job2.every_reboot()
 
@@ -60,8 +63,9 @@ for job7 in cron:
     sys.stdout.write(job7)
     job7.every().dow()
 
-cron.remove_all('echo')
-cron.remove_all('/foo/bar')
+cron.remove_all(command='/foo/bar')
+cron.remove_all(comment='This command')
+cron.remove_all()
 cron.write()
 
 # Croniter Extentions allow you to ask for the scheduled job times, make
@@ -79,7 +83,7 @@ import subprocess as sp
 from datetime import datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.5.2'
+__version__ = '1.6'
 
 ITEMREX = re.compile('^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     '\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -260,19 +264,29 @@ class CronTab(object):
                 result.append(cron)
         return result
 
-    def remove_all(self, command):
-        """Removes all crons using the stated command."""
-        l_value = self.find_command(command)
-        for c_value in l_value:
-            self.remove(c_value)
+    def remove_all(self, command=None, comment=None):
+        """Removes all crons using the stated command OR that have the
+        stated comment OR removes everything if no arguments specified."""
+        if command:
+            return self.remove(*self.find_command(command))
+        elif comment:
+            return self.remove(*self.find_comment(comment))
+        return self.remove(*self.crons[:])
 
-    def remove(self, item):
+    def remove(self, *items):
         """Remove a selected cron from the crontab."""
+        r = 0
+        for item in items:
+            r += self._remove(item)
+        return r
+
+    def _remove(self, item):
         # The last item often has a trailing line feed
         if self.crons[-1] == item and self.lines[-1] == '':
             self.lines.remove(self.lines[-1])
         self.crons.remove(item)
         self.lines.remove(item)
+        return 1
 
     def _read_execute(self):
         """Returns the command line for reading a crontab"""
@@ -429,6 +443,20 @@ class CronItem(object):
         """
         return SimpleItemInterface(self, unit)
 
+    def setall(self, *args):
+        """Replace existing time pattern with these five values given as args:
+
+           job.setall(1, 2) == '1 2 * * *'
+
+           job.setall(0, 0, None, '>', 'SUN') == '0 0 * 12 SUN'
+        """
+        for x, s in enumerate(self.slices):
+            if x < len(args) and args[x] != None:
+                s.parse(args[x])
+            else:
+                s.clear()
+        return self.render_time()
+
     def clear(self):
         """Clear the special and set values"""
         self.special = None
@@ -518,9 +546,10 @@ class SimpleItemInterface(object):
     def __init__(self, item, units):
         self.job = item
         self.unit = units
-        for (x, i) in enumerate(['minute', 'hour', 'dom', 'month', 'dow']):
-            setattr(self, i, self._set(x))
-            setattr(self, i+'s', self._set(x))
+        for (x, i) in enumerate(['minute', 'hour', 'dom', 'month', 'dow',
+                                 'min', 'hour', 'day', 'moon', 'weekday']):
+            setattr(self, i, self._set(x % 5))
+            setattr(self, i+'s', self._set(x % 5))
 
     def _set(self, target):
         def innercall():
@@ -550,12 +579,12 @@ class CronSlice(object):
         self.enum  = enum
         self.parts = []
         if value:
-            self._set_value(value)
+            self.parse(value)
 
-    def _set_value(self, value):
+    def parse(self, value):
         """Set values into the slice."""
         self.parts = []
-        for part in value.split(','):
+        for part in str(value).split(','):
             if part.find("/") > 0 or part.find("-") > 0 or part == '*':
                 self.parts.append( self.get_range( part ) )
             else:
