@@ -208,6 +208,7 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@weekly weekly\n""")
 
     def test_25_setall(self):
+        """Set all values at once"""
         job = self.crontab.new(command='all')
         job.setall(1, '*/2', '2-4', '>', 'SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
@@ -216,6 +217,16 @@ class BasicTestCase(unittest.TestCase):
         job.setall('1 */2 2-4 12 SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
 
+    def test_26_commands(self):
+        """Get all commands"""
+        self.assertEqual(list(self.crontab.commands), 
+                         [u'firstcommand', u'range', u'byweek',
+                          u'disabled', u'spaced', u'rebooted'])
+
+    def test_27_comments(self):
+        """Get all comments"""
+        self.assertEqual(list(self.crontab.comments),
+                         ['Comment One', 'Comment  Two'])
 
 if __name__ == '__main__':
     test_support.run_unittest(

@@ -253,7 +253,7 @@ class CronTab(object):
         """Return a list of crons using a command."""
         result = []
         for cron in self.crons:
-            if cron.command.match(command):
+            if command in cron.command:
                 result.append(cron)
         return result
 
@@ -265,6 +265,7 @@ class CronTab(object):
                 result.append(cron)
         return result
 
+    @property
     def commands(self):
         """Return a generator of all unqiue commands used in this crontab"""
         returned = []
@@ -273,11 +274,12 @@ class CronTab(object):
                 yield cron.command
                 returned.append(cron.command)
 
+    @property
     def comments(self):
         """Return a generator of all unique comments/IDs used in this crontab"""
         returned = []
         for cron in self.crons:
-            if cron.comment not in returned:
+            if cron.comment and cron.comment not in returned:
                 yield cron.comment
                 returned.append(cron.comment)
 
@@ -337,7 +339,7 @@ class CronItem(object):
     An item which objectifies a single line of a crontab and
     May be considered to be a cron job object.
     """
-    def __init__(self, line=None, command='', cocommentt='', cron=None):
+    def __init__(self, line=None, command='', comment='', cron=None):
         self.valid = False
         self.enabled = True
         self.slices  = []
@@ -352,7 +354,7 @@ class CronItem(object):
             self.parse(line.strip())
 
         elif command:
-            self.command = CronCommand(unicode(command))
+            self.set_command(command)
             self.valid = True
 
     def delete(self):
@@ -360,6 +362,10 @@ class CronItem(object):
             sys.stderr.write("Cron item is not associated with a crontab!\n")
         else:
             self.cron.remove(self)
+
+    def set_command(self, cmd):
+        """Set the command and filter as needed"""
+        self.command = unicode(cmd).strip()
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
@@ -369,7 +375,7 @@ class CronItem(object):
         result = ITEMREX.findall(line)
         if result:
             o_value = result[0]
-            self.command = CronCommand(o_value[5])
+            self.set_command(o_value[5])
             self.comment = o_value[7]
             try:
                 self._set_slices( o_value )
@@ -381,7 +387,7 @@ class CronItem(object):
             result = SPECREX.findall(line)
             if result and result[0][0] in SPECIALS:
                 o_value = result[0]
-                self.command = CronCommand(o_value[1])
+                self.set_command(o_value[1])
                 self.comment = o_value[3]
                 value = SPECIALS[o_value[0]]
                 if value.find('@') != -1:
@@ -431,7 +437,7 @@ class CronItem(object):
 
     def render(self):
         """Render this set cron-job to a string"""
-        result = "%s %s" % (self.render_schedule(), unicode(self.command))
+        result = "%s %s" % (self.render_schedule(), self.command)
         if self.comment:
             result += " # " + self.comment
         if not self.enabled:
@@ -797,27 +803,4 @@ class CronRange(object):
     def __unicode__(self):
         return self.render()
 
-
-class CronCommand(object):
-    """Represent a cron command as an object."""
-    def __init__(self, line):
-        self._command = line
-
-    def match(self, command):
-        """Match the command given"""
-        return command in self._command
-
-    def command(self):
-        """Return the command line"""
-        return self._command
-
-    def __str__(self):
-        """Return a string as a value"""
-        # TODO: encode with the system's default encoding?
-        # i.e. locale.getpreferredencoding()
-        return self.__unicode__()
-
-    def __unicode__(self):
-        """Return unicode command line value"""
-        return self.command().strip()
 
