@@ -114,7 +114,7 @@ class BasicTestCase(unittest.TestCase):
         jobs = self.crontab.find_comment('Comment One')
         self.assertEqual(len(jobs), 2)
         for job in jobs:
-            self.assertEqual(job.meta(), 'Comment One')
+            self.assertEqual(job.comment, 'Comment One')
 
 if __name__ == '__main__':
     test_support.run_unittest(

@@ -244,7 +244,7 @@ class CronTab(object):
 
         Returns the new CronItem object.
         """
-        item = CronItem(command=command, meta=comment, cron=self)
+        item = CronItem(command=command, comment=comment, cron=self)
         self.crons.append(item)
         self.lines.append(item)
         return item
@@ -261,9 +261,25 @@ class CronTab(object):
         """Return a list of crons using the comment field."""
         result = []
         for cron in self.crons:
-            if cron.meta() == comment:
+            if cron.comment == comment:
                 result.append(cron)
         return result
+
+    def commands(self):
+        """Return a generator of all unqiue commands used in this crontab"""
+        returned = []
+        for cron in self.crons:
+            if cron.command not in returned:
+                yield cron.command
+                returned.append(cron.command)
+
+    def comments(self):
+        """Return a generator of all unique comments/IDs used in this crontab"""
+        returned = []
+        for cron in self.crons:
+            if cron.comment not in returned:
+                yield cron.comment
+                returned.append(cron.comment)
 
     def remove_all(self, command=None, comment=None):
         """Removes all crons using the stated command OR that have the
@@ -321,14 +337,14 @@ class CronItem(object):
     An item which objectifies a single line of a crontab and
     May be considered to be a cron job object.
     """
-    def __init__(self, line=None, command='', meta='', cron=None):
+    def __init__(self, line=None, command='', cocommentt='', cron=None):
         self.valid = False
         self.enabled = True
         self.slices  = []
         self.special = False
-        self.cron  = cron
+        self.cron    = cron
+        self.comment = comment
 
-        self._meta   = meta
         self._log    = None
 
         self._set_slices()
@@ -354,7 +370,7 @@ class CronItem(object):
         if result:
             o_value = result[0]
             self.command = CronCommand(o_value[5])
-            self._meta   = o_value[7]
+            self.comment = o_value[7]
             try:
                 self._set_slices( o_value )
             except KeyError:
@@ -366,7 +382,7 @@ class CronItem(object):
             if result and result[0][0] in SPECIALS:
                 o_value = result[0]
                 self.command = CronCommand(o_value[1])
-                self._meta   = o_value[3]
+                self.comment = o_value[3]
                 value = SPECIALS[o_value[0]]
                 if value.find('@') != -1:
                     self.special = value
@@ -416,17 +432,11 @@ class CronItem(object):
     def render(self):
         """Render this set cron-job to a string"""
         result = "%s %s" % (self.render_schedule(), unicode(self.command))
-        if self.meta():
-            result += " # " + self.meta()
+        if self.comment:
+            result += " # " + self.comment
         if not self.enabled:
             result = "# " + result
         return result
-
-    def meta(self, value=None):
-        """Return or set the meta value to replace the set values"""
-        if value:
-            self._meta = value
-        return self._meta
 
     def every_reboot(self):
         """Set to every reboot instead of a time pattern: @reboot"""

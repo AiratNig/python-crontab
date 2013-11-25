@@ -119,7 +119,7 @@ Find an existing job by comment::
 
 Set and get the comment for a job::
 
-    comment = job.meta(['New Comment for job'])
+    comment = job.comment = 'New Comment for job'
 
 Clean a job of all rules::
 
