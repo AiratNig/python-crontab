@@ -308,6 +308,7 @@ class CronTab(object):
 
     def __unicode__(self):
         return self.render()
+
     def __len__(self):
         return len(self.crons)
 
@@ -524,6 +525,9 @@ class CronItem(object):
 
     def __repr__(self):
         return "<CronJob '%s'>" % str(self)
+
+    def __len__(self):
+        return len(str(self))
 
     def __eq__(self, value):
         return str(self) == str(value)
