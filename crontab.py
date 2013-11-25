@@ -350,7 +350,10 @@ class CronItem(object):
 
         self._log    = None
 
-        self._set_slices()
+        # Initalise five cron slices using static info.
+        for i_value in range(0, 5):
+            self.slices.append(CronSlice(job=self, **S_INFO[i_value]))
+
         if line and line.strip():
             self.parse(line.strip())
 
@@ -373,39 +376,15 @@ class CronItem(object):
         if not line or line[0] == '#':
             self.enabled = False
             line = line[1:].strip()
-        result = ITEMREX.findall(line)
-        if result:
-            o_value = result[0]
-            self.set_command(o_value[5])
-            self.comment = o_value[7]
-            try:
-                self._set_slices( o_value )
-            except KeyError:
-                self.enabled = False
-            else:
-                self.valid = True
-        elif line.find('@') < line.find('#') or line.find('#')==-1:
-            result = SPECREX.findall(line)
-            if result and result[0][0] in SPECIALS:
-                o_value = result[0]
-                self.set_command(o_value[1])
-                self.comment = o_value[3]
-                value = SPECIALS[o_value[0]]
-                if value.find('@') != -1:
-                    self.special = value
-                else:
-                    self._set_slices( value.split(' ') )
-                self.valid = True
+        self._set_parse(ITEMREX.findall(line))
+        self._set_parse(SPECREX.findall(line))
 
-    def _set_slices(self, o_value=None):
-        """Set the values of this slice set"""
-        self.slices = []
-        for i_value in range(0, 5):
-            if not o_value:
-                o_value = [None, None, None, None, None]
-            self.slices.append(
-                CronSlice(job=self, value=o_value[i_value],
-                    **S_INFO[i_value]))
+    def _set_parse(self, result):
+        if not result: return
+        self.set_command(result[0][-3])
+        self.comment = result[0][-1]
+        self.valid   = self.setall(*result[0][:-3])
+        self.enabled = self.enabled and self.valid
 
     def enable(self, enabled=True):
         """Set if this cron job is enabled or not"""
@@ -466,17 +445,27 @@ class CronItem(object):
     def setall(self, *args):
         """Replace existing time pattern with these five values given as args:
 
+           job.setall("1 2 * * *")
            job.setall(1, 2) == '1 2 * * *'
-
            job.setall(0, 0, None, '>', 'SUN') == '0 0 * 12 SUN'
         """
-        if len(args) == 1 and ' ' in args[0]:
-            return self._set_slices(args[0].split(' '))
+        if len(args) == 1 and isinstance(args[0], basestring):
+            if args[0].count(' ') == 4:
+                args = args[0].strip().split(' ')
+            elif args[0] == 'reboot':
+                self.special = '@'+args[0]
+                return True
+            elif args[0].strip()[0] == '@':
+                self.setall(SPECIALS.get(args[0][1:], args[0][1:]))
+
         for x, s in enumerate(self.slices):
-            if x < len(args) and args[x] != None:
+            try:
                 s.parse(args[x])
-            else:
+            except IndexError:
                 s.clear()
+            except KeyError:
+                return False
+        return True
 
     def clear(self):
         """Clear the special and set values"""
@@ -738,8 +727,6 @@ def _render(value, resolve=False):
         return str(int(value))
     return str(value)
 
-
-
 class CronRange(object):
     """A range between one value and another for a time range."""
     def __init__(self, vslice, *vrange):
@@ -803,5 +790,3 @@ class CronRange(object):
 
     def __unicode__(self):
         return self.render()
-
-

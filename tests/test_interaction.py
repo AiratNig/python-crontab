@@ -55,8 +55,8 @@ RESULT_TAB = """# First Comment
 0 5 * * * spaced # Comment  Two
 
 
-@reboot rebooted
-# Last Comment
+@reboot rebooted # re-id
+# Last Comment @has this # extra
 """
 
 class BasicTestCase(unittest.TestCase):
@@ -226,7 +226,7 @@ class BasicTestCase(unittest.TestCase):
     def test_27_comments(self):
         """Get all comments"""
         self.assertEqual(list(self.crontab.comments),
-                         ['Comment One', 'Comment  Two'])
+                         ['Comment One', 'Comment  Two', 're-id'])
 
 if __name__ == '__main__':
     test_support.run_unittest(
