@@ -14,11 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Rewritten from scratch, but based on the code from gnome-schedule by:
-# - Philip Van Hoof <me at pvanhoof dot be>
-# - Gaute Hope <eg at gaute dot vetsj dot com>
-# - Kristof Vansant <de_lupus at pandora dot be>
+# Ideas from gnome-schedule: Philip Van Hoof, Gaute Hope, Kristof Vansant
 #
+# REQUEST: Please do NOT simply copy and paste this code into your own
+#          projects. Please package this module for your distribution and
+#          use as a direct dependancy.
+# 
 EXAMPLE_USE = """
 from crontab import CronTab
 import sys
