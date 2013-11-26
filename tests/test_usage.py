@@ -27,7 +27,7 @@ import sys
 sys.path.insert(0, '../')
 
 import unittest
-from crontab import CronTab, EXAMPLE_USE
+from crontab import CronTab, __doc__
 try:
     from test import test_support
 except ImportError:
@@ -54,7 +54,7 @@ class UseTestCase(unittest.TestCase):
         cron = CronTab(tab='')
         sys.stdout = DummyStdout()
         sys.stdout.flush = flush
-        exec(EXAMPLE_USE)
+        exec(__doc__)
         sys.stdout = sys.__stdout__
         self.assertEqual(cron.render(), '')
 
