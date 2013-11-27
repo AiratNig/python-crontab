@@ -77,7 +77,7 @@ job3.schedule().get_prev()
 
 """
 
-import os, re, sys
+import os, re, sys, pwd
 import tempfile
 import subprocess as sp
 
@@ -162,6 +162,8 @@ class CronTab(object):
 
     """
     def __init__(self, user=None, tab=None, tabfile=None, log=None):
+        if user == True and not WINOS:
+            user = pwd.getpwuid( os.getuid() )[ 0 ]
         self.lines = None
         self.crons = None
         self.filen = None

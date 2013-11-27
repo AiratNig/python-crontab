@@ -58,6 +58,11 @@ class UseTestCase(unittest.TestCase):
         sys.stdout = sys.__stdout__
         self.assertEqual(cron.render(), '')
 
+    def test_04_username(self):
+        """Username is True"""
+        cron = CronTab(user=True)
+        self.assertNotEqual(cron.user, True)
+
 if __name__ == '__main__':
     test_support.run_unittest(
        UseTestCase,

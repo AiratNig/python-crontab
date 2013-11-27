@@ -49,14 +49,16 @@ Case        Meaning
 How to Use the Module
 =====================
 
-Getting access to a crontab can happen in four ways, two system methods::
+Getting access to a crontab can happen in five ways, three system methods that
+will work only on Unix and require you to have the right permissions::
 
     from crontab import CronTab
 
-    system_cron = CronTab()
-    user_cron = CronTab('root')
+    system_cron   = CronTab()
+    my_user_cron  = CronTab(user=True)
+    users_cron    = CronTab(user='username')
 
-And two ways from non-system sources::
+And two ways from non-system sources that will work on Windows too::
 
     file_cron = CronTab(tabfile='filename.tab')
     mem_cron = CronTab(tab="""
