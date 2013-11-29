@@ -521,6 +521,10 @@ class CronItem(object):
         return self.hour
 
     @property
+    def day(self):
+        return self.dom
+
+    @property
     def dom(self):
         """Return the day-of-the month slice"""
         return self.slices[2]
