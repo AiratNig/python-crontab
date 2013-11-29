@@ -173,6 +173,27 @@ and replace it with a simple single unit::
 
 This is a convenience method only, it does normal things with the existing api.
 
+Frequency Calculation
+=====================
+
+Every job's schedule has a frequency. We can attempt to calculate the number
+of times a job would execute in a give amount of time. We have three simple
+methods::
+
+    job.setall("1,2 1,2 * * *")
+    job.frequency_per_day() == 4
+
+The per year frequency method will tell you how many days a year the
+job would execute::
+
+    job.setall("* * 1,2 1,2 *")
+    job.frequency_per_year(year=2010) == 4
+
+These are combined to give the number of times a job will execute in any year::
+
+    job.setall("1,2 1,2 1,2 1,2 *")
+    job.frequency(year=2010) == 16
+
 Log Functionality
 =================
 
