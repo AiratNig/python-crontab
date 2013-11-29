@@ -81,7 +81,7 @@ import os, re, sys, pwd
 import tempfile
 import subprocess as sp
 
-from datetime import datetime
+from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
 __version__ = '1.6.0'
@@ -114,11 +114,11 @@ SPECIALS = {
 SPECIAL_IGNORE = ['midnight', 'annually']
 
 S_INFO = [
-    { 'name' : 'Minutes',      'max_v' : 59, 'min_v' : 0 },
-    { 'name' : 'Hours',        'max_v' : 23, 'min_v' : 0 },
-    { 'name' : 'Day of Month', 'max_v' : 31, 'min_v' : 1 },
-    { 'name' : 'Month',        'max_v' : 12, 'min_v' : 1, 'enum' : MONTH_ENUM },
-    { 'name' : 'Day of Week',  'max_v' : 7,  'min_v' : 0, 'enum' : WEEK_ENUM },
+    { 'name' : 'Minutes',      'max' : 59, 'min' : 0 },
+    { 'name' : 'Hours',        'max' : 23, 'min' : 0 },
+    { 'name' : 'Day of Month', 'max' : 31, 'min' : 1 },
+    { 'name' : 'Month',        'max' : 12, 'min' : 1, 'enum' : MONTH_ENUM },
+    { 'name' : 'Day of Week',  'max' : 6,  'min' : 0, 'enum' : WEEK_ENUM},
 ]
 
 # Detect Python3 and which OS for temperments.
@@ -484,6 +484,36 @@ class CronItem(object):
         for slice_v in self.slices:
             slice_v.clear()
 
+    def frequency(self, year=None):
+        """Returns the number of times this item will execute in a given year
+           (defaults to this year)
+        """
+        return self.frequency_per_year() * self.frequency_per_day()
+
+    def frequency_per_year(self, year=None):
+        """Returns the number of /days/ this item will execute on in a year
+           (defaults to this year)
+        """
+        result = 0
+        if not year:
+            year = date.today().year
+
+        weekdays = list(self[4])
+        days = (date(year+1,1,1) - date(year,1,1)).days
+
+        for month in self[3]:
+            for day in self[2]:
+                try:
+                    if date(year,month,day).weekday() in weekdays:
+                        result += 1
+                except ValueError:
+                    continue
+        return result
+
+    def frequency_per_day(self):
+        """Returns the number of time this item will execute in any day"""
+        return len(self[0]) * len(self[1])
+
     def schedule(self, date_from=None):
         """Return a croniter schedule is available."""
         if not date_from:
@@ -550,6 +580,9 @@ class CronItem(object):
     def __len__(self):
         return len(str(self))
 
+    def __getitem__(self, x):
+        return self.slices[x]
+
     def __eq__(self, value):
         return str(self) == str(value)
 
@@ -603,8 +636,8 @@ class CronSlice(object):
     def __init__(self, job, info, value=None):
         self.job   = job
         self.name  = info.get('name', None)
-        self.min   = info.get('min_v', None)
-        self.max   = info.get('max_v', None)
+        self.min   = info.get('min', None)
+        self.max   = info.get('max', None)
         self.enum  = info.get('enum', None)
         self.parts = []
         if value:
@@ -692,6 +725,22 @@ class CronSlice(object):
         """Return a cron range for this slice"""
         return CronRange( self, *vrange )
 
+    def __iter__(self):
+        """Return the entire element as an iterable"""
+        r = {}
+        for part in self.parts:
+            if isinstance(part, CronRange):
+                for bit in part.range():
+                    r[bit] = 1
+            else:
+                r[int(part)] = 1
+        for x in r:
+            yield x
+
+    def __len__(self):
+        """Returns the number of times this slice happens in it's range"""
+        return len(list(self.__iter__()))
+
     def _v(self, v):
         if v == '>':
             v = self.max
@@ -703,6 +752,10 @@ class CronSlice(object):
             raise ValueError("Unrecognised '%s'='%s'" % (self.name, v))
         except KeyError:
             raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
+
+        # If it's a sunday, make it a sunday
+        if self.max == 6 and v == 7:
+            out = 0
 
         if int(out) < self.min or int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
@@ -800,8 +853,12 @@ class CronRange(object):
         if self.seq != 1:
             value += "/%d" % self.seq
         if value != '*' and SYSTEMV:
-            value = ','.join(map(str, range(self.vfrom, self.vto+1, self.seq)))
+            value = ','.join(map(str, self.range()))
         return value
+
+    def range(self):
+        """Returns the range of this cron slice as a iterable list"""
+        return range(self.vfrom, self.vto+1, self.seq)
 
     def every(self, value):
         """Set the sequence value for this range."""
@@ -809,6 +866,9 @@ class CronRange(object):
 
     def __lt__(self, value):
         return int(self.vfrom) < int(value)
+
+    def __gt__(self, value):
+        return int(self.vto) > int(value)
 
     def __int__(self):
         return int(self.vfrom)

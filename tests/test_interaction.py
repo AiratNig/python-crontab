@@ -104,7 +104,7 @@ class BasicTestCase(unittest.TestCase):
         job.month.on(6)
         self.assertEqual(job.render(), '* 4 5 6 * fields')
         job.dow.on(7)
-        self.assertEqual(job.render(), '* 4 5 6 7 fields')
+        self.assertEqual(job.render(), '* 4 5 6 0 fields')
 
     def test_06_clear(self):
         """Render Hours Days and Weeks"""
@@ -114,7 +114,7 @@ class BasicTestCase(unittest.TestCase):
         job.dom.on(5)
         job.month.on(6)
         job.dow.on(7)
-        self.assertEqual(job.render(), '3 4 5 6 7 clear')
+        self.assertEqual(job.render(), '3 4 5 6 0 clear')
         job.clear()
         self.assertEqual(job.render(), '* * * * * clear')
 
