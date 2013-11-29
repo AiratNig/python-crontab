@@ -79,9 +79,10 @@ class BasicTestCase(unittest.TestCase):
     def test_02_access(self):
         """All Entries Are Accessable"""
         line_no = 0
-        for cron in self.crontab:
-            self.assertEqual(str(cron.command), COMMANDS[line_no])
+        for job in self.crontab:
+            self.assertEqual(str(job.command), COMMANDS[line_no])
             line_no += 1
+        self.assertEqual(line_no, 6)
 
     def test_03_blank(self):
         """Render Blank"""
@@ -153,9 +154,9 @@ class BasicTestCase(unittest.TestCase):
 
     def test_11_disabled(self):
         """Disabled Job"""
-        jobs = self.crontab.find_command('firstcommand')
+        jobs = list(self.crontab.find_command('firstcommand'))
         self.assertTrue(jobs[0].enabled)
-        jobs = self.crontab.find_command('disabled')
+        jobs = list(self.crontab.find_command('disabled'))
         self.assertFalse(jobs[0].enabled)
 
     def test_12_disable(self):
@@ -177,10 +178,10 @@ class BasicTestCase(unittest.TestCase):
         cron = '# start of tab'
         for i in range(10):
             crontab = CronTab(tab=cron)
-            job = crontab.new(command='multi')
+            job = list(crontab.new(command='multi'))
             cron = unicode(crontab)
             crontab = CronTab(tab=cron)
-            crontab.find_command('multi')[0].delete()
+            list(crontab.find_command('multi'))[0].delete()
             cron = unicode(crontab)
         self.assertEqual(unicode(crontab), '# start of tab\n')
 

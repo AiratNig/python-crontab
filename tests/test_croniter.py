@@ -42,7 +42,7 @@ class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
         self.crontab = CronTab(tab=INITAL_TAB)
-        self.job = self.crontab.find_command('execute')[0]
+        self.job = list(self.crontab.find_command('execute'))[0]
 
     def test_01_schedule(self):
         """Get Scheduler"""

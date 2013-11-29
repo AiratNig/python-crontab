@@ -41,8 +41,8 @@ job.setall(1, 12, None, None, None)
 job2 = cron.new(command='/foo/bar',comment='SomeID')
 job2.every_reboot()
 
-list = cron.find_command('bar')
-job3 = list[0]
+jobs = list(cron.find_command('bar'))
+job3 = jobs[0]
 job3.clear()
 job3.minute.every(1)
 
@@ -259,20 +259,22 @@ class CronTab(object):
         return item
 
     def find_command(self, command):
-        """Return a list of crons using a command."""
-        result = []
-        for cron in self.crons:
-            if command in cron.command:
-                result.append(cron)
-        return result
+        """Return an iter of jobs matching any part of the command."""
+        for job in self.crons:
+            if command in job.command:
+                yield job
 
     def find_comment(self, comment):
-        """Return a list of crons using the comment field."""
-        result = []
-        for cron in self.crons:
-            if cron.comment == comment:
-                result.append(cron)
-        return result
+        """Return an iter of jobs that match the comment field exactly."""
+        for job in self.crons:
+            if job.comment == comment:
+                yield job
+
+    def find_by_time(self, *args, **kwargs):
+        """Return an iter of jobs that match this time pattern"""
+        for job in self.crons:
+            if job.is_match(*args, **kwargs):
+                yield job
 
     @property
     def commands(self):
@@ -514,6 +516,13 @@ class CronItem(object):
         """Returns the number of time this item will execute in any day"""
         return len(self[0]) * len(self[1])
 
+    def is_match(self, minute=None, hour=None, day=None, month=None, dow=None):
+        """Returns true if this job will execute within these specifications"""
+        for x, s in enumerate([minute, hour, day, month, dow]):
+            if s != None and not self[x].is_match(s):
+                return False
+        return True
+
     def schedule(self, date_from=None):
         """Return a croniter schedule is available."""
         if not date_from:
@@ -666,6 +675,16 @@ class CronSlice(object):
             return '*'
         return _render_values(self.parts, ',', resolve)
 
+    def is_match(self, values):
+        """Return true if this slice would contain all these values"""
+        if not isinstance(values, (list, tuple)):
+            values = [values]
+        targets = list(self)
+        for value in values:
+            if value not in targets:
+                return False
+        return True
+
     def __repr__(self):
         return "<CronSlice '%s'>" % str(self)
 
@@ -753,7 +772,7 @@ class CronSlice(object):
         except KeyError:
             raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
 
-        # If it's a sunday, make it a sunday
+        # If it's a sunday, make it a sunday (force 7 to 0)
         if self.max == 6 and v == 7:
             out = 0
 

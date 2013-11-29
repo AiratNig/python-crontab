@@ -71,7 +71,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_02_simple_enum(self):
         """Simple Enumerations"""
-        e = self.crontab.find_command('enums')[0]
+        e = list(self.crontab.find_command('enums'))[0]
         self.assertEqual(e.month, 'JAN')
         self.assertEqual(e.month.render(True), '1')
         self.assertEqual(e.dow, 'SAT')
@@ -79,13 +79,13 @@ class BasicTestCase(unittest.TestCase):
 
     def test_03_enum_range(self):
         """Enumeration Ranges"""
-        e = self.crontab.find_command('ranges')[0]
+        e = list(self.crontab.find_command('ranges'))[0]
         self.assertEqual(e.month, 'MAR-APR')
         self.assertEqual(e.month.render(True), '3-4' )
 
     def test_04_sets(self):
         """Enumeration Sets"""
-        e = self.crontab.find_command('multiples')[0]
+        e = list(self.crontab.find_command('multiples'))[0]
         self.assertEqual(e.dow, 'MON,WED,FRI')
         self.assertEqual(e.dow.render(True), '1,3,5' )
 
@@ -111,7 +111,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_08_find_comment(self):
         """Comment Set"""
-        jobs = self.crontab.find_comment('Comment One')
+        jobs = list(self.crontab.find_comment('Comment One'))
         self.assertEqual(len(jobs), 2)
         for job in jobs:
             self.assertEqual(job.comment, 'Comment One')

@@ -111,7 +111,7 @@ class BasicTestCase(unittest.TestCase):
     def test_04_root(self):
         """Cron Job Items"""
         pids, dates = ROOT_PIDS[:], ROOT_DATES[:]
-        job = self.crontab.find_command('rootscript')[0]
+        job = list(self.crontab.find_command('rootscript'))[0]
         for log in job.log:
             self.assertEqual(log['pid'], pids.pop(0))
             self.assertEqual(log['date'], dates.pop(0))
