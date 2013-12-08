@@ -200,6 +200,8 @@ class CronTab(object):
             proc = sp.Popen(self._read_execute(),
                             stdout=sp.PIPE, stderr=sp.PIPE)
             (out, err) = proc.communicate()
+            if err and 'no crontab for' in err:
+                pass
             if err:
                 raise IOError("Read crontab %s: %s" % (self.user, err))
             lines = out.decode('utf-8').split("\n")
