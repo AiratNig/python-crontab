@@ -113,11 +113,15 @@ Use a special syntax::
 
 Find an existing job by command::
 
-    list = cron.find_command('bar')
+    iter = cron.find_command('bar')
 
 Find an existing job by comment::
 
-    list = cron.find_comment('ID or some text')
+    iter = cron.find_comment('ID or some text')
+
+Find an existing job by schedule::
+
+    iter = cron.find_by_time(2, 10, '2-4', '*/2', None)
 
 Set and get the comment for a job::
 

@@ -123,6 +123,13 @@ class FrequencyTestCase(unittest.TestCase):
         self.job.setall("* * * * *")
         self.assertEqual(self.job.frequency(year=2010), 525600)
 
+    def test_13_enum(self):
+        """Enumerations"""
+        self.job.setall("0 0 * * MON-WED")
+        self.assertEqual(self.job.frequency(year=2010), 157)
+        self.job.setall("0 0 * JAN-MAR *")
+        self.assertEqual(self.job.frequency(year=2010), 90)
+
 
 if __name__ == '__main__':
     test_support.run_unittest(

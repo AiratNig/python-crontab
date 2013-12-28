@@ -229,6 +229,14 @@ class BasicTestCase(unittest.TestCase):
         self.assertEqual(list(self.crontab.comments),
                          ['Comment One', 'Comment  Two', 're-id'])
 
+#    def test_28_match(self):
+#        job = self.crontab.new(command='match')
+#        job.setall("*/2 * * * *")
+#        self.assertTrue( job == "*/2 * * * *" )
+#        self.assertTrue( job == ["*/2"] )
+#        self.assertTrue( job >= ["*"] )
+#        self.assertTrue( job <= ["*/3" ] )
+
 if __name__ == '__main__':
     test_support.run_unittest(
        BasicTestCase,

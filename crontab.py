@@ -879,7 +879,7 @@ class CronRange(object):
 
     def range(self):
         """Returns the range of this cron slice as a iterable list"""
-        return range(self.vfrom, self.vto+1, self.seq)
+        return range(int(self.vfrom), int(self.vto)+1, self.seq)
 
     def every(self, value):
         """Set the sequence value for this range."""
