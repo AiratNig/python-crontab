@@ -467,11 +467,14 @@ class CronItem(object):
         if len(args) == 1 and isinstance(args[0], basestring):
             if args[0].count(' ') == 4:
                 args = args[0].strip().split(' ')
-            elif args[0] == 'reboot':
+            elif args[0].strip()[0] == '@':
+                args[0] = args[0][1:]
+
+            if args[0] == 'reboot':
                 self.special = '@'+args[0]
                 return True
-            elif args[0].strip()[0] == '@':
-                self.setall(SPECIALS.get(args[0][1:], args[0][1:]))
+            elif args[0] in SPECIALS.keys():
+                return self.setall(SPECIALS[args[0]])
 
         for x, s in enumerate(self.slices):
             try:

@@ -203,13 +203,23 @@ class BasicTestCase(unittest.TestCase):
         job.month.on('>')
         self.assertEqual(unicode(job), '59 23 31 12 * max')
 
-    def test_24_specials(self):
-        """Specials Conversion"""
+    def test_24_special_r(self):
+        """Read Specials"""
+        tab = CronTab(tabfile='data/specials_enc.tab')
+        self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@daily midnight\n@weekly weekly\n@reboot reboot\n""")
+        self.assertEqual(len(list(tab)), 5)
+
+    def test_24_special_d(self):
+        """Removal All Specials"""
+        tab = CronTab(tabfile='data/specials.tab')
+        tab.remove_all()
+        self.assertEqual(len(list(tab)), 0)
+
+    def test_24_special_w(self):
+        """Write Specials"""
         tab = CronTab(tabfile='data/specials.tab')
         self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@weekly weekly\n""")
         self.assertEqual(len(list(tab)), 3)
-        tab.remove_all()
-        self.assertEqual(len(list(tab)), 0)
 
     def test_25_setall(self):
         """Set all values at once"""
