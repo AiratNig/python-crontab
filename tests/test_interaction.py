@@ -207,6 +207,9 @@ class BasicTestCase(unittest.TestCase):
         """Specials Conversion"""
         tab = CronTab(tabfile='data/specials.tab')
         self.assertEqual(tab.render(), """@hourly hourly\n@daily daily\n@weekly weekly\n""")
+        self.assertEqual(len(list(tab)), 3)
+        tab.remove_all()
+        self.assertEqual(len(list(tab)), 0)
 
     def test_25_setall(self):
         """Set all values at once"""
