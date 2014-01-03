@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (C) 2013 Martin Owens
+# Copyright (C) YEAR Martin Owens
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ Test the cron log extention with a test syslog example data file.
 
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, date
 
 sys.path.insert(0, '../')
 
@@ -45,30 +45,32 @@ SHAD_PIDS = ['16551', '16497']
 USER_PIDS = ['16591', '16588', '16573', '16569', '16554', '16539', '16523',\
             '16519','16513','16496','16490']
 
+YEAR = date.today().year
+
 ROOT_DATES = [
-    datetime(2013, 4, 4, 21, 34, 1),
-    datetime(2013, 4, 4, 21, 32, 1),
-    datetime(2013, 4, 4, 21, 30, 1),
-    datetime(2013, 4, 4, 21, 28, 1),
-    datetime(2013, 4, 4, 21, 26, 1),
-    datetime(2013, 4, 4, 21, 24, 1),
+    datetime(YEAR, 4, 4, 21, 34, 1),
+    datetime(YEAR, 4, 4, 21, 32, 1),
+    datetime(YEAR, 4, 4, 21, 30, 1),
+    datetime(YEAR, 4, 4, 21, 28, 1),
+    datetime(YEAR, 4, 4, 21, 26, 1),
+    datetime(YEAR, 4, 4, 21, 24, 1),
   ]
 SHAD_DATES = [
-    datetime(2013, 4, 4, 21, 30, 1),
-    datetime(2013, 4, 4, 21, 25, 1),
+    datetime(YEAR, 4, 4, 21, 30, 1),
+    datetime(YEAR, 4, 4, 21, 25, 1),
   ]
 USER_DATES = [
-    datetime(2013, 4, 4, 21, 34, 1),
-    datetime(2013, 4, 4, 21, 33, 2),
-    datetime(2013, 4, 4, 21, 32, 1),
-    datetime(2013, 4, 4, 21, 31, 1),
-    datetime(2013, 4, 4, 21, 30, 1),
-    datetime(2013, 4, 4, 21, 29, 1),
-    datetime(2013, 4, 4, 21, 28, 1),
-    datetime(2013, 4, 4, 21, 27, 1),
-    datetime(2013, 4, 4, 21, 26, 1),
-    datetime(2013, 4, 4, 21, 25, 1),
-    datetime(2013, 4, 4, 21, 24, 1),
+    datetime(YEAR, 4, 4, 21, 34, 1),
+    datetime(YEAR, 4, 4, 21, 33, 2),
+    datetime(YEAR, 4, 4, 21, 32, 1),
+    datetime(YEAR, 4, 4, 21, 31, 1),
+    datetime(YEAR, 4, 4, 21, 30, 1),
+    datetime(YEAR, 4, 4, 21, 29, 1),
+    datetime(YEAR, 4, 4, 21, 28, 1),
+    datetime(YEAR, 4, 4, 21, 27, 1),
+    datetime(YEAR, 4, 4, 21, 26, 1),
+    datetime(YEAR, 4, 4, 21, 25, 1),
+    datetime(YEAR, 4, 4, 21, 24, 1),
   ]
 READ_LINE = [ 'The End', 'Sickem', '2', '9', 'First Line' ]
 
