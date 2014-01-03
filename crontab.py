@@ -19,7 +19,7 @@
 # REQUEST: Please do NOT simply copy and paste this code into your own
 #          projects. Please package this module for your distribution and
 #          use as a direct dependancy.
-# 
+#
 """
 from crontab import CronTab
 import sys
@@ -202,7 +202,7 @@ class CronTab(object):
             (out, err) = proc.communicate()
             if err and 'no crontab for' in err:
                 pass
-            if err:
+            elif err:
                 raise IOError("Read crontab %s: %s" % (self.user, err))
             lines = out.decode('utf-8').split("\n")
         for line in lines:
