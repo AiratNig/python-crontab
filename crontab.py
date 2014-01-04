@@ -1,5 +1,5 @@
 #
-# Copyright 2013, Martin Owens <doctormo@gmail.com>
+# Copyright 2014, Martin Owens <doctormo@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -67,7 +67,16 @@ for job7 in cron:
 cron.remove_all(command='/foo/bar')
 cron.remove_all(comment='This command')
 cron.remove_all()
+
+output = cron.render()
+
 cron.write()
+
+cron.write(filename='/tmp/output.txt')
+
+#cron.write_to_user(user=True)
+
+#cron.write_to_user(user='root')
 
 # Croniter Extentions allow you to ask for the scheduled job times, make
 # sure you have croniter installed, it's not a hard dependancy.
@@ -84,7 +93,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.6.0'
+__version__ = '1.7.0'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     r'\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -162,15 +171,13 @@ class CronTab(object):
 
     """
     def __init__(self, user=None, tab=None, tabfile=None, log=None):
-        if user == True and not WINOS:
-            user = pwd.getpwuid( os.getuid() )[ 0 ]
         self.lines = None
         self.crons = None
         self.filen = None
         # Protect windows users
         self.root  = not WINOS and os.getuid() == 0
-        self.user  = user
-        # Detect older unixes and help them out.
+        self._user = user
+        # Load string or filename as inital crontab
         self.intab = tab
         self.read(tabfile)
         self._log = log
@@ -182,6 +189,12 @@ class CronTab(object):
         if self._log == None or isinstance(self._log, basestring):
             self._log = CronLog(self._log, user=self.user or 'root')
         return self._log
+
+    @property
+    def user(self):
+        if self._user == True and not WINOS:
+            return pwd.getpwuid( os.getuid() )[ 0 ]
+        return self._user
 
     def read(self, filename=None):
         """
@@ -214,7 +227,7 @@ class CronTab(object):
                 self.lines.append(line.replace('\n',''))
 
     def write(self, filename=None):
-        """Write the crontab to the system. Saves all information."""
+        """Write the crontab to it's source or a given filename."""
         if filename:
             self.filen = filename
 
@@ -238,6 +251,14 @@ class CronTab(object):
             # Add the entire crontab back to the user crontab
             sp.Popen(self._write_execute(path)).wait()
             os.unlink(path)
+
+    def write_to_user(self, user=None):
+        """Write the crontab to a user (or root) instead of a file."""
+        self.filen = None
+        self.intab = None
+        if user != None:
+            self.user = user
+        self.write()
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
