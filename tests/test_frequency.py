@@ -59,19 +59,19 @@ class FrequencyTestCase(unittest.TestCase):
         self.job.setall("21-29 10-14 * * *")
         self.assertEqual(len(self.job[0]), 9)
         self.assertEqual(len(self.job[1]), 5)
-        self.assertEqual(self.job.slices.frequency_per_day(), 45)
+        self.assertEqual(self.job.frequency_per_day(), 45)
 
     def test_02_days_per_year(self):
         """Frequency in Days per Year"""
         self.job.setall("* * * * *")
-        self.assertEqual(self.job.slices.frequency_per_year(year=2010), 365)
-        self.assertEqual(self.job.slices.frequency_per_year(year=2012), 366)
+        self.assertEqual(self.job.frequency_per_year(year=2010), 365)
+        self.assertEqual(self.job.frequency_per_year(year=2012), 366)
         self.job.setall("1 1 11-20 1,4,6,8 0,6")
         self.assertEqual(len(self.job[2]), 10)
         self.assertEqual(len(self.job[3]), 4)
         self.assertEqual(len(self.job[4]), 2)
-        self.assertEqual(self.job.slices.frequency_per_year(year=2013), 11)
-        self.assertEqual(self.job.slices.frequency_per_year(year=2010), 12)
+        self.assertEqual(self.job.frequency_per_year(year=2013), 11)
+        self.assertEqual(self.job.frequency_per_year(year=2010), 12)
 
     def test_03_job(self):
         """Once Yearly"""

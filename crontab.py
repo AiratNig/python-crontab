@@ -481,6 +481,16 @@ class CronItem(object):
         """
         return self.slices.frequency(year=year)
 
+    def frequency_per_year(self, year=None):
+        """Returns the number of /days/ this item will execute on in a year
+           (defaults to this year)
+        """
+        return self.slices.frequency_per_year(year=year)
+
+    def frequency_per_day(self):
+        """Returns the number of time this item will execute in any day"""
+        return self.slices.frequency_per_day()
+
     def schedule(self, date_from=None):
         """Return a croniter schedule is available."""
         if not date_from:
@@ -659,9 +669,6 @@ class CronSlices(list):
         return self.frequency_per_year(year=year) * self.frequency_per_day()
 
     def frequency_per_year(self, year=None):
-        """Returns the number of /days/ this item will execute on in a year
-           (defaults to this year)
-        """
         result = 0
         if not year:
             year = date.today().year
