@@ -385,8 +385,7 @@ class CronItem(object):
         self._log    = None
 
         # Initalise five cron slices using static info.
-        for i_value in range(0, 5):
-            self.slices.append(CronSlice(self, S_INFO[i_value]))
+        self.slices = CronSlices()
 
         if line and line.strip():
             self.parse(line.strip())
@@ -436,24 +435,9 @@ class CronItem(object):
         """Return true if this job is valid"""
         return self.valid
 
-    def render_time(self):
-        """Return just numbered parts of this crontab"""
-        return ' '.join([ unicode(self.slices[i]) for i in range(0, 5) ])
-
-    def render_schedule(self):
-        """Return just the first part of a cron job (the numbers or specials)"""
-        time = self.render_time()
-        if self.special:
-            return self.special
-        elif not SYSTEMV:
-            for (name, value) in SPECIALS.items():
-                if value == time and name not in SPECIAL_IGNORE:
-                    return "@%s" % name
-        return time
-
     def render(self):
         """Render this set cron-job to a string"""
-        result = "%s %s" % (self.render_schedule(), self.command)
+        result = "%s %s" % (str(self.slices), self.command)
         if self.comment:
             result += " # " + self.comment
         if not self.enabled:
@@ -463,7 +447,7 @@ class CronItem(object):
     def every_reboot(self):
         """Set to every reboot instead of a time pattern: @reboot"""
         self.clear()
-        self.special = '@reboot'
+        return self.slices.setall('@reboot')
 
     def every(self, unit=1):
         """
@@ -476,7 +460,7 @@ class CronItem(object):
         Many of these patterns exist as special tokens on Linux, such as
         `@midnight` and `@hourly`
         """
-        return SimpleItemInterface(self, unit)
+        return ItemEveryInterface(self.slices, unit)
 
     def setall(self, *args):
         """Replace existing time pattern with these five values given as args:
@@ -485,76 +469,24 @@ class CronItem(object):
            job.setall(1, 2) == '1 2 * * *'
            job.setall(0, 0, None, '>', 'SUN') == '0 0 * 12 SUN'
         """
-        if len(args) == 1 and isinstance(args[0], basestring):
-            if args[0].count(' ') == 4:
-                args = args[0].strip().split(' ')
-            elif args[0].strip()[0] == '@':
-                args[0] = args[0][1:]
-
-            if args[0] == 'reboot':
-                self.special = '@'+args[0]
-                return True
-            elif args[0] in SPECIALS.keys():
-                return self.setall(SPECIALS[args[0]])
-
-        for x, s in enumerate(self.slices):
-            try:
-                s.parse(args[x])
-            except IndexError:
-                s.clear()
-            except KeyError:
-                return False
-        return True
+        return self.slices.setall(*args)
 
     def clear(self):
         """Clear the special and set values"""
-        self.special = None
-        for slice_v in self.slices:
-            slice_v.clear()
+        return self.slices.clear()
 
     def frequency(self, year=None):
         """Returns the number of times this item will execute in a given year
            (defaults to this year)
         """
-        return self.frequency_per_year() * self.frequency_per_day()
-
-    def frequency_per_year(self, year=None):
-        """Returns the number of /days/ this item will execute on in a year
-           (defaults to this year)
-        """
-        result = 0
-        if not year:
-            year = date.today().year
-
-        weekdays = list(self[4])
-        days = (date(year+1,1,1) - date(year,1,1)).days
-
-        for month in self[3]:
-            for day in self[2]:
-                try:
-                    if date(year,month,day).weekday() in weekdays:
-                        result += 1
-                except ValueError:
-                    continue
-        return result
-
-    def frequency_per_day(self):
-        """Returns the number of time this item will execute in any day"""
-        return len(self[0]) * len(self[1])
-
-    def is_match(self, minute=None, hour=None, day=None, month=None, dow=None):
-        """Returns true if this job will execute within these specifications"""
-        for x, s in enumerate([minute, hour, day, month, dow]):
-            if s != None and not self[x].is_match(s):
-                return False
-        return True
+        return self.slices.frequency(year=year)
 
     def schedule(self, date_from=None):
         """Return a croniter schedule is available."""
         if not date_from:
             date_from = datetime.now()
         if Croniter:
-            return Croniter(self.render_time(), date_from)
+            return Croniter(self.slices.clean_render(), date_from)
         raise ImportError("Croniter is not available. Please install croniter"+\
                          " python module via pip or your package manager")
 
@@ -631,7 +563,7 @@ class CronItem(object):
         return self.render()
 
 
-class SimpleItemInterface(object):
+class ItemEveryInterface(object):
     """Provide an interface to the job.every() method:
         Available Calls:
           minute, minutes, hour, hours, dom, doms, month, months, dow, dows
@@ -640,7 +572,7 @@ class SimpleItemInterface(object):
        will be set to '0' and the target unit will be set as every x units.
     """
     def __init__(self, item, units):
-        self.job = item
+        self.slices = item
         self.unit = units
         for (x, i) in enumerate(['minute', 'hour', 'dom', 'month', 'dow',
                                  'min', 'hour', 'day', 'moon', 'weekday']):
@@ -650,11 +582,11 @@ class SimpleItemInterface(object):
     def _set(self, target):
         def innercall():
             """Returned inner call for setting slice targets"""
-            self.job.clear()
+            self.slices.clear()
             # Day-of-week is actually a level 2 set, not level 4.
             for p in range(target == 4 and 2 or target):
-                self.job.slices[p].on('<')
-            self.job.slices[target].every(self.unit)
+                self.slices[p].on('<')
+            self.slices[target].every(self.unit)
         return innercall
 
     def year(self):
@@ -662,14 +594,110 @@ class SimpleItemInterface(object):
         if self.unit > 1:
             raise ValueError("Invalid value '%s', " % self.unit + \
                              "job may only be in '1' year.")
-        self.job.clear()
-        self.job.special = '@yearly'
+        self.slices.setall('@yearly')
+
+
+class CronSlices(list):
+    """Controls a list of five time 'slices' which reprisent:
+        minute frequency, hour frequency, day of month frequency,
+        month requency and finally day of the week frequency.
+     """
+    def __init__(self, *args):
+        for info in S_INFO:
+            self.append(CronSlice(info))
+        self.special = None
+        self.setall(*args)
+
+    def setall(self, *args):
+        """Parses the various ways date/time frequency can be specified"""
+        self.special = None
+        args = list(args)
+        if len(args) == 1 and isinstance(args[0], basestring):
+            if args[0].count(' ') == 4:
+                args = args[0].strip().split(' ')
+            elif args[0].strip()[0] == '@':
+                args[0] = args[0][1:]
+
+            if args[0] == 'reboot':
+                self.clear()
+                self.special = '@'+args[0]
+                return True
+            elif args[0] in SPECIALS.keys():
+                return self.setall(SPECIALS[args[0]])
+
+        for x, s in enumerate(self):
+            try:
+                s.parse(args[x])
+            except IndexError:
+                s.clear()
+            except KeyError:
+                return False
+        return True
+
+    def clean_render(self):
+        """Return just numbered parts of this crontab"""
+        return ' '.join([ unicode(s) for s in self ])
+
+    def render(self):
+        """Return just the first part of a cron job (the numbers or specials)"""
+        time = self.clean_render()
+        if self.special:
+            return self.special
+        elif not SYSTEMV:
+            for (name, value) in SPECIALS.items():
+                if value == time and name not in SPECIAL_IGNORE:
+                    return "@%s" % name
+        return time
+
+    def clear(self):
+        """Clear the special and set values"""
+        self.special = None
+        for s in self:
+            s.clear()
+
+    def frequency(self, year=None):
+        return self.frequency_per_year(year=year) * self.frequency_per_day()
+
+    def frequency_per_year(self, year=None):
+        """Returns the number of /days/ this item will execute on in a year
+           (defaults to this year)
+        """
+        result = 0
+        if not year:
+            year = date.today().year
+
+        weekdays = list(self[4])
+        days = (date(year+1,1,1) - date(year,1,1)).days
+
+        for month in self[3]:
+            for day in self[2]:
+                try:
+                    if date(year,month,day).weekday() in weekdays:
+                        result += 1
+                except ValueError:
+                    continue
+        return result
+
+    def frequency_per_day(self):
+        """Returns the number of time this item will execute in any day"""
+        return len(self[0]) * len(self[1])
+
+    def is_match(self, *args):
+        """Returns true if this job will execute within these specifications"""
+        for x, s in enumerate(CronSlices(*args)):
+            if s != None and not self[x].is_match(s):
+                return False
+        return True
+
+    def __str__(self):
+        return self.render()
+
+
 
 
 class CronSlice(object):
     """Cron slice object which shows a time pattern"""
-    def __init__(self, job, info, value=None):
-        self.job   = job
+    def __init__(self, info, value=None):
         self.name  = info.get('name', None)
         self.min   = info.get('min', None)
         self.max   = info.get('max', None)

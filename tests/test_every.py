@@ -44,52 +44,52 @@ class EveryTestCase(unittest.TestCase):
         """Every Minutes"""
         for job in self.crontab:
             job.every(3).minutes()
-            self.assertEqual(job.render_time(), '*/3 * * * *')
+            self.assertEqual(job.slices.clean_render(), '*/3 * * * *')
 
     def test_01_hours(self):
         """Every Hours"""
         for job in self.crontab:
             job.every(3).hours()
-            self.assertEqual(job.render_time(), '0 */3 * * *')
+            self.assertEqual(job.slices.clean_render(), '0 */3 * * *')
 
     def test_02_dom(self):
         """Every Day of the Month"""
         for job in self.crontab:
             job.every(3).dom()
-            self.assertEqual(job.render_time(), '0 0 */3 * *')
+            self.assertEqual(job.slices.clean_render(), '0 0 */3 * *')
 
     def test_03_single(self):
         """Every Single Hour"""
         for job in self.crontab:
             job.every().hour()
-            self.assertEqual(job.render_time(), '0 * * * *')
+            self.assertEqual(job.slices.clean_render(), '0 * * * *')
 
     def test_04_month(self):
         """Every Month"""
         for job in self.crontab:
             job.every(3).months()
-            self.assertEqual(job.render_time(), '0 0 1 */3 *')
+            self.assertEqual(job.slices.clean_render(), '0 0 1 */3 *')
 
     def test_05_dow(self):
         """Every Day of the Week"""
         for job in self.crontab:
             job.every(3).dow()
-            self.assertEqual(job.render_time(), '0 0 * * */3')
+            self.assertEqual(job.slices.clean_render(), '0 0 * * */3')
 
     def test_06_year(self):
         """Every Year"""
         for job in self.crontab:
             job.every().year()
-            self.assertEqual(job.render_schedule(), '@yearly')
-            self.assertEqual(job.render_time(), '* * * * *')
+            self.assertEqual(job.slices.render(), '@yearly')
+            self.assertEqual(job.slices.clean_render(), '0 0 1 1 *')
             self.assertRaises(ValueError, job.every(2).year)
 
     def test_07_reboot(self):
         """Every Reboot"""
         for job in self.crontab:
             job.every_reboot()
-            self.assertEqual(job.render_schedule(), '@reboot')
-            self.assertEqual(job.render_time(), '* * * * *')
+            self.assertEqual(job.slices.render(), '@reboot')
+            self.assertEqual(job.slices.clean_render(), '* * * * *')
 
 if __name__ == '__main__':
     test_support.run_unittest(
