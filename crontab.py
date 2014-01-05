@@ -97,7 +97,7 @@ __version__ = '1.7.0'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     r'\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
-SPECREX = re.compile(r'@(\w+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
+SPECREX = re.compile(r'^\s*@(\w+)\s([^#\n]*)(\s+#\s*([^\n]*)|$)')
 DEVNULL = ">/dev/null 2>&1"
 
 MONTH_ENUM = [ None,
@@ -616,31 +616,37 @@ class CronSlices(list):
         for info in S_INFO:
             self.append(CronSlice(info))
         self.special = None
-        self.setall(*args)
+        if args and not self.setall(*args):
+            raise ValueError("Can't set cron value to: %s" % str(args))
 
-    def setall(self, *args):
+    def setall(self, to, *slices):
         """Parses the various ways date/time frequency can be specified"""
-        self.special = None
-        args = list(args)
-        if len(args) == 1 and isinstance(args[0], basestring):
-            if args[0].count(' ') == 4:
-                args = args[0].strip().split(' ')
-            elif args[0].strip()[0] == '@':
-                args[0] = args[0][1:]
+        self.clear()
+        if isinstance(to, CronItem):
+            slices = to.slices
+        elif isinstance(to, list):
+            slices = to
+        elif slices:
+            slices = (to,) + slices
+        elif isinstance(to, basestring) and to:
+            if to.count(' ') == 4:
+                slices = to.strip().split(' ')
+            elif to.strip()[0] == '@':
+                to = to[1:]
 
-            if args[0] == 'reboot':
-                self.clear()
-                self.special = '@'+args[0]
+            if to == 'reboot':
+                self.special = '@reboot'
                 return True
-            elif args[0] in SPECIALS.keys():
-                return self.setall(SPECIALS[args[0]])
+            elif to in SPECIALS.keys():
+                return self.setall(SPECIALS[to])
 
-        for x, s in enumerate(self):
+        if id(slices) == id(self):
+            raise ValueError("Can not set cron to itself!")
+
+        for a, b in zip(self, slices):
             try:
-                s.parse(args[x])
-            except IndexError:
-                s.clear()
-            except KeyError:
+                a.parse(b)
+            except Exception:
                 return False
         return True
 
@@ -716,6 +722,8 @@ class CronSlice(object):
     def parse(self, value):
         """Set values into the slice."""
         self.parts = []
+        if value == None:
+            return self.clear()
         for part in str(value).split(','):
             if part.find("/") > 0 or part.find("-") > 0 or part == '*':
                 self.parts.append( self.get_range( part ) )

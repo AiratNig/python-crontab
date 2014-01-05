@@ -226,33 +226,41 @@ class BasicTestCase(unittest.TestCase):
         job = self.crontab.new(command='all')
         job.setall(1, '*/2', '2-4', '>', 'SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
-        job.setall()
+        job.setall('*')
         self.assertEqual(unicode(job), '* * * * * all')
         job.setall('1 */2 2-4 12 SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
 
-    def test_26_commands(self):
+    def test_26_setall_obj(self):
+        """Copy all values"""
+        job = self.crontab.new(command='all')
+        job2 = self.crontab.new(command='ignore')
+        job2.setall("1 */2 2-4 12 SUN")
+        job.setall(job2)
+        self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
+        job2.setall("2 */3 4-8 10 MON")
+        job.setall(job2.slices)
+        self.assertEqual(unicode(job), '2 */3 4-8 10 MON all')
+
+    def test_27_commands(self):
         """Get all commands"""
         self.assertEqual(list(self.crontab.commands), 
                          [u'firstcommand', u'range', u'byweek',
                           u'disabled', u'spaced', u'rebooted'])
 
-    def test_27_comments(self):
+    def test_28_comments(self):
         """Get all comments"""
         self.assertEqual(list(self.crontab.comments),
                          ['Comment One', 'Comment  Two', 're-id'])
 
-#    def test_28_match(self):
+#    def test_29_compare(self):
+#        """Compare Times"""
 #        job = self.crontab.new(command='match')
-#        job.setall("*/2 * * * *")
-#        self.assertTrue(job.is_match("*/2 * * * *"))
-
-#    def test_29_auto_match(self):
 #        job.setall("*/2 * * * *")
 #        self.assertTrue( job == "*/2 * * * *" )
 #        self.assertTrue( job == ["*/2"] )
-#        self.assertTrue( job >= ["*"] )
-#        self.assertTrue( job <= ["*/3"] )
+#        self.assertTrue( job < ["*"] )
+#        self.assertTrue( job > "*/3" )
 
 if __name__ == '__main__':
     test_support.run_unittest(
