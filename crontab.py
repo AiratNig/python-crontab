@@ -293,10 +293,10 @@ class CronTab(object):
             if job.comment == comment:
                 yield job
 
-    def find_by_time(self, *args, **kwargs):
+    def find_by_time(self, *args):
         """Return an iter of jobs that match this time pattern"""
         for job in self.crons:
-            if job.is_match(*args, **kwargs):
+            if job.slices == CronSlices(*args):
                 yield job
 
     @property
@@ -560,8 +560,11 @@ class CronItem(object):
     def __getitem__(self, x):
         return self.slices[x]
 
-    def __eq__(self, value):
-        return str(self) == str(value)
+    def __lt__(self, value):
+        return self.frequency() < CronSlices(value).frequency()
+
+    def __gt__(self, value):
+        return self.frequency() > CronSlices(value).frequency()
 
     def __str__(self):
         return self.__unicode__()
@@ -633,6 +636,8 @@ class CronSlices(list):
                 slices = to.strip().split(' ')
             elif to.strip()[0] == '@':
                 to = to[1:]
+            else:
+                slices = [to]
 
             if to == 'reboot':
                 self.special = '@reboot'
@@ -695,15 +700,11 @@ class CronSlices(list):
         """Returns the number of time this item will execute in any day"""
         return len(self[0]) * len(self[1])
 
-    def is_match(self, *args):
-        """Returns true if this job will execute within these specifications"""
-        for x, s in enumerate(CronSlices(*args)):
-            if s != None and not self[x].is_match(s):
-                return False
-        return True
-
     def __str__(self):
         return self.render()
+
+    def __eq__(self, arg):
+        return self.render() == CronSlices(arg).render()
 
 
 
@@ -743,16 +744,6 @@ class CronSlice(object):
         if len(self.parts) == 0:
             return '*'
         return _render_values(self.parts, ',', resolve)
-
-    def is_match(self, values):
-        """Return true if this slice would contain all these values"""
-        if not isinstance(values, (list, tuple)):
-            values = [values]
-        targets = list(self)
-        for value in values:
-            if value not in targets:
-                return False
-        return True
 
     def __repr__(self):
         return "<CronSlice '%s'>" % str(self)
@@ -816,6 +807,9 @@ class CronSlice(object):
     def __iter__(self):
         """Return the entire element as an iterable"""
         r = {}
+        # An empty part means '*' which is every(1)
+        if not self.parts:
+            self.every(1)
         for part in self.parts:
             if isinstance(part, CronRange):
                 for bit in part.range():

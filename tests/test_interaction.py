@@ -73,7 +73,7 @@ class BasicTestCase(unittest.TestCase):
         results = RESULT_TAB.split('\n')
         line_no = 0
         for line in self.crontab.lines:
-            self.assertEqual(line, results[line_no])
+            self.assertEqual(str(line), results[line_no])
             line_no += 1
 
     def test_02_access(self):
@@ -226,10 +226,12 @@ class BasicTestCase(unittest.TestCase):
         job = self.crontab.new(command='all')
         job.setall(1, '*/2', '2-4', '>', 'SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
-        job.setall('*')
-        self.assertEqual(unicode(job), '* * * * * all')
+        job.setall('*/2')
+        self.assertEqual(unicode(job), '*/2 * * * * all')
         job.setall('1 */2 2-4 12 SUN')
         self.assertEqual(unicode(job), '1 */2 2-4 12 SUN all')
+        job.setall(['*'])
+        self.assertEqual(unicode(job), '* * * * * all')
 
     def test_26_setall_obj(self):
         """Copy all values"""
@@ -252,15 +254,6 @@ class BasicTestCase(unittest.TestCase):
         """Get all comments"""
         self.assertEqual(list(self.crontab.comments),
                          ['Comment One', 'Comment  Two', 're-id'])
-
-#    def test_29_compare(self):
-#        """Compare Times"""
-#        job = self.crontab.new(command='match')
-#        job.setall("*/2 * * * *")
-#        self.assertTrue( job == "*/2 * * * *" )
-#        self.assertTrue( job == ["*/2"] )
-#        self.assertTrue( job < ["*"] )
-#        self.assertTrue( job > "*/3" )
 
 if __name__ == '__main__':
     test_support.run_unittest(

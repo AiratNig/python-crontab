@@ -66,7 +66,7 @@ class BasicTestCase(unittest.TestCase):
         results = RESULT_TAB.split('\n')
         line_no = 0
         for line in self.crontab.intab.split('\n'):
-            self.assertEqual(line, results[line_no])
+            self.assertEqual(str(line), results[line_no])
             line_no += 1
 
     def test_02_simple_enum(self):
@@ -94,20 +94,20 @@ class BasicTestCase(unittest.TestCase):
         job = self.crontab.new(command='new')
         job.month.on('JAN')
         job.dow.on('SUN')
-        self.assertEqual(job, '* * * JAN SUN new')
+        self.assertEqual(str(job), '* * * JAN SUN new')
 
     def test_06_create_range(self):
         """Created Enum Range"""
         job = self.crontab.new(command='new2')
         job.month.during('APR', 'NOV').every(2)
-        self.assertEqual(job, '* * * APR-NOV/2 * new2')
+        self.assertEqual(str(job), '* * * APR-NOV/2 * new2')
 
     def test_07_create_set(self):
         """Created Enum Set"""
         job = self.crontab.new(command='new3')
         job.month.on('APR')
         job.month.also.on('NOV','JAN')
-        self.assertEqual(job, '* * * JAN,APR,NOV * new3')
+        self.assertEqual(str(job), '* * * JAN,APR,NOV * new3')
 
     def test_08_find_comment(self):
         """Comment Set"""
