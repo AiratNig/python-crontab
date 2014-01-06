@@ -66,6 +66,7 @@ for job7 in cron:
 
 cron.remove_all(command='/foo/bar')
 cron.remove_all(comment='This command')
+cron.remove_all(time='* * * * *')
 cron.remove_all()
 
 output = cron.render()
@@ -293,7 +294,7 @@ class CronTab(object):
             if job.comment == comment:
                 yield job
 
-    def find_by_time(self, *args):
+    def find_time(self, *args):
         """Return an iter of jobs that match this time pattern"""
         for job in self.crons:
             if job.slices == CronSlices(*args):
@@ -317,13 +318,15 @@ class CronTab(object):
                 yield cron.comment
                 returned.append(cron.comment)
 
-    def remove_all(self, command=None, comment=None):
+    def remove_all(self, command=None, comment=None, time=None):
         """Removes all crons using the stated command OR that have the
         stated comment OR removes everything if no arguments specified."""
         if command:
             return self.remove(*self.find_command(command))
         elif comment:
             return self.remove(*self.find_comment(comment))
+        elif time:
+            return self.remove(*self.find_time(time))
         return self.remove(*self.crons[:])
 
     def remove(self, *items):

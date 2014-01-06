@@ -74,6 +74,12 @@ class RemovalTestCase(unittest.TestCase):
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 68)
 
+    def test_05_remove_date(self):
+        """Remove all with Time Code"""
+        self.crontab.remove_all(time='2 * * * *')
+        self.assertEqual(len(self.crontab), 2)
+        self.assertEqual(len(self.crontab.render()), 67)
+
 if __name__ == '__main__':
     test_support.run_unittest(
        RemovalTestCase,

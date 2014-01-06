@@ -121,7 +121,8 @@ Find an existing job by comment::
 
 Find an existing job by schedule::
 
-    iter = cron.find_by_time(2, 10, '2-4', '*/2', None)
+    iter = cron.find_time(2, 10, '2-4', '*/2', None)
+    iter = cron.find_time("*/2 * * * *")
 
 Set and get the comment for a job::
 
@@ -146,6 +147,7 @@ Remove Items::
     cron.remove( job )
     cron.remove_all('echo')
     cron.remove_all(comment='foo')
+    cron.remove_all(time='*/2')
 
 Clear entire cron of all jobs::
 
@@ -197,6 +199,12 @@ These are combined to give the number of times a job will execute in any year::
 
     job.setall("1,2 1,2 1,2 1,2 *")
     job.frequency(year=2010) == 16
+
+Frequency can be quickly checked using python built-in operators::
+
+    job < "*/2 * * * *"
+    job > job2
+    job.slices == "*/5"
 
 Log Functionality
 =================
