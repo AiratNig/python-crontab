@@ -161,6 +161,14 @@ Write CronTab to new filename::
 
     cron.write( 'output.tab' )
 
+Write to this user's crontab (unix only)::
+
+    cron.write_to_user( user=True )
+
+Write to some other user's crontab::
+
+    cron.write_to_user( user='bob' )
+
 Proceeding Unit Confusion
 =========================
 
