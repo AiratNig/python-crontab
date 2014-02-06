@@ -87,14 +87,15 @@ job3.schedule().get_prev()
 
 """
 
-import os, re, sys, pwd
+import os, re, sys
+
 import tempfile
 import subprocess as sp
 
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.7.0'
+__version__ = '1.7.1'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     r'\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -140,6 +141,11 @@ SYSTEMV = not WINOS and (os.uname()[0] in ["SunOS", "AIX", "HP-UX"] \
 CRONCMD = "/usr/bin/crontab"
 if sys.argv[0].startswith('test_'):
     CRONCMD = './data/crontest'
+
+try:
+    import pwd
+except ImportError:
+    pwd = None
 
 if PY3:
     # pylint: disable=W0622
@@ -193,7 +199,7 @@ class CronTab(object):
 
     @property
     def user(self):
-        if self._user == True and not WINOS:
+        if self._user == True and pwd:
             return pwd.getpwuid( os.getuid() )[ 0 ]
         return self._user
 
