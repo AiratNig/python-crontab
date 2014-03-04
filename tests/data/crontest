@@ -3,8 +3,25 @@
 import os
 import sys
 
-if sys.argv[1] == '-l':
-    fhl = open('data/basic.tab', 'r')
+args = sys.argv[1:]
+user = None
+
+if '-u' in args:
+    user = args[args.index('-u')+1]
+
+if user == None:
+    sys.stderr.write("no crontab for nouser\n")
+    sys.exit(1)
+
+if '-l' in args:
+    if not os.path.exists('data/%s.tab' % user):
+        user = 'user'
+    fhl = open('data/%s.tab' % user, 'r')
     print fhl.read()
+else:
+    for a in args:
+        if a[0] != '-' and a != user:
+            # We could save the crontab here, but not right now
+            pass
 
 sys.exit(0)

@@ -95,7 +95,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)' +
     r'\s+([^@#\s]+)\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -220,7 +220,7 @@ class CronTab(object):
             proc = sp.Popen(self._read_execute(),
                             stdout=sp.PIPE, stderr=sp.PIPE)
             (out, err) = proc.communicate()
-            if err and 'no crontab for' in err:
+            if err and 'no crontab for' in str(err):
                 pass
             elif err:
                 raise IOError("Read crontab %s: %s" % (self.user, err))

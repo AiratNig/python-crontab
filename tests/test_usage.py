@@ -38,15 +38,21 @@ class DummyStdout(object):
         pass
 
 BASIC = '@hourly firstcommand\n\n'
+USER = '\n*/4 * * * * user_command # user_comment\n\n\n'
 
 def flush():
     pass
 
 class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
-    def test_01_basic(self):
+    def test_01_empty(self):
         """Open system crontab"""
         cron = CronTab()
+        self.assertEqual(cron.render(), "")
+
+    def test_02_user(self):
+        """Open a user's crontab"""
+        cron = CronTab(user='basic')
         self.assertEqual(cron.render(), BASIC)
 
     def test_03_usage(self):
@@ -62,6 +68,7 @@ class UseTestCase(unittest.TestCase):
         """Username is True"""
         cron = CronTab(user=True)
         self.assertNotEqual(cron.user, True)
+        self.assertEqual(cron.render(), USER)
 
 if __name__ == '__main__':
     test_support.run_unittest(
