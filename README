@@ -7,6 +7,9 @@ Bug Reports and Development
 
 Please report any problems to the `launchpad bug tracker <https://bugs.launchpad.net/python-crontab>`_. Please use Bazaar and push patches to the `launchpad project code hosting <https://code.launchpad.net/python-crontab>`_.
 
+**Note:** If you get the error ``TypeError: __init__() takes exactly 2 arguments`` when using CronTab, you have the wrong module installed. You need to install ``python-crontab`` and not ``crontab`` from pypi or your local package manager and try again.
+
+
 Description
 ===========
 
