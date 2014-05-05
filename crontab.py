@@ -97,7 +97,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.7.2'
+__version__ = '1.7.3'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -167,6 +167,19 @@ except ImportError:
     Croniter = None
 
 
+def pipeOpen(cmd, *args, **flags):
+    """Runs a program and orders the arguments for compatability.
+
+    a. keyword args are flags and always appear /before/ arguments for bsd
+    """
+    l = (cmd,)
+    for (k,v) in flags.items():
+        if v != None:
+            l += len(k)==1 and ("-%s" % (k,), str(v)) or ("--%s=%s" % (k,v),)
+    l += tuple(args)
+    return sp.Popen(l, stdout=sp.PIPE, stderr=sp.PIPE)
+
+
 class CronTab(object):
     """
     Crontab object which can access any time based cron using the standard.
@@ -217,9 +230,7 @@ class CronTab(object):
             with open(filename, 'r') as fhl:
                 lines = fhl.readlines()
         else:
-            proc = sp.Popen(self._read_execute(),
-                            stdout=sp.PIPE, stderr=sp.PIPE)
-            (out, err) = proc.communicate()
+            (out, err) = pipeOpen(CRONCMD, l='', u=self.user).communicate()
             if err and 'no crontab for' in str(err):
                 pass
             elif err:
@@ -256,7 +267,7 @@ class CronTab(object):
 
         if not self.filen:
             # Add the entire crontab back to the user crontab
-            sp.Popen(self._write_execute(path)).wait()
+            pipeOpen(CRONCMD, path, u=self.user).wait()
             os.unlink(path)
 
     def write_to_user(self, user=None):
@@ -350,20 +361,6 @@ class CronTab(object):
         self.crons.remove(item)
         self.lines.remove(item)
         return 1
-
-    def _read_execute(self):
-        """Returns the command line for reading a crontab"""
-        return [CRONCMD, '-l'] + self._user_execute()
-
-    def _write_execute(self, path):
-        """Return the command line for writing a crontab"""
-        return [CRONCMD, path] + self._user_execute()
-
-    def _user_execute(self):
-        """User command switches to append to the read and write commands."""
-        if self.user:
-            return ['-u', str(self.user)]
-        return []
 
     def __iter__(self):
         return self.crons.__iter__()
