@@ -174,10 +174,10 @@ def pipeOpen(cmd, *args, **flags):
     """
     l = (cmd,)
     for (k,v) in flags.items():
-        if v != None:
+        if v is not None:
             l += len(k)==1 and ("-%s" % (k,), str(v)) or ("--%s=%s" % (k,v),)
     l += tuple(args)
-    return sp.Popen(l, stdout=sp.PIPE, stderr=sp.PIPE)
+    return sp.Popen(tuple(a for a in l if a), stdout=sp.PIPE, stderr=sp.PIPE)
 
 
 class CronTab(object):
