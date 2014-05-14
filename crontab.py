@@ -257,12 +257,12 @@ class CronTab(object):
                 return
 
         if self.filen:
-            fileh = open(self.filen, 'w')
+            fileh = open(self.filen, 'wb')
         else:
             filed, path = tempfile.mkstemp()
-            fileh = os.fdopen(filed, 'w')
+            fileh = os.fdopen(filed, 'wb')
 
-        fileh.write(self.render())
+        fileh.write(self.render().encode('utf-8'))
         fileh.close()
 
         if not self.filen:
@@ -365,6 +365,9 @@ class CronTab(object):
     def __iter__(self):
         return self.crons.__iter__()
 
+    def __getitem__(self, i):
+        return self.crons[i]
+
     def __unicode__(self):
         return self.render()
 
@@ -410,10 +413,12 @@ class CronItem(object):
 
     def set_command(self, cmd):
         """Set the command and filter as needed"""
-        self.command = unicode(cmd).strip()
+        self.command = cmd.strip()
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
+        if type(line) is str and not PY3:
+            line = unicode(line, 'utf-8')
         if not line or line[0] == '#':
             self.enabled = False
             line = line[1:].strip()
