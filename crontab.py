@@ -38,7 +38,7 @@ job.month.also.during('OCT', 'DEC')
 job.every(2).days()
 job.setall(1, 12, None, None, None)
 
-job2 = cron.new(command='/foo/bar',comment='SomeID')
+job2 = cron.new(command='/foo/bar', comment='SomeID')
 job2.every_reboot()
 
 jobs = list(cron.find_command('bar'))
@@ -97,7 +97,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.7.3'
+__version__ = '1.8'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -414,6 +414,10 @@ class CronItem(object):
     def set_command(self, cmd):
         """Set the command and filter as needed"""
         self.command = cmd.strip()
+
+    def set_comment(self, cmt):
+        """Set the comment and don't filter"""
+        self.comment = cmt
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""

@@ -98,7 +98,17 @@ Setting all time slices at once::
 
 Creating a job with a comment::
 
-    job = cron.new(command='/foo/bar',comment='SomeID')
+    job = cron.new(command='/foo/bar', comment='SomeID')
+
+Get the comment or command for a job::
+
+    command = job.command
+    comment = job.comment
+
+Modify the comment or command on a job::
+
+    job.set_command("new_script.sh")
+    job.set_comment("New ID or comment here")
 
 Disabled or Enable Job::
 
@@ -126,10 +136,6 @@ Find an existing job by schedule::
 
     iter = cron.find_time(2, 10, '2-4', '*/2', None)
     iter = cron.find_time("*/2 * * * *")
-
-Set and get the comment for a job::
-
-    comment = job.comment = 'New Comment for job'
 
 Clean a job of all rules::
 
