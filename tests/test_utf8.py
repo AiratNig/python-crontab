@@ -43,10 +43,11 @@ class Utf8TestCase(unittest.TestCase):
         self.crontab = CronTab(tabfile='data/a-ůțƒ-8.tab')
 
     def test_01_read(self):
-        """Read and Write utf8 Filename"""
+        """Read from utf8 Filename"""
         self.assertTrue(self.crontab)
 
     def test_02_write(self):
+        """Write to utf8 Filename"""
         self.crontab.write("data/output-ůțƒ-8.tab")
 
     def test_03_presevation(self):
@@ -56,13 +57,25 @@ class Utf8TestCase(unittest.TestCase):
            open("data/output-ůțƒ-8.tab", "r").read())
 
     def test_04_command(self):
-        """Command String"""
+        """Read Command String"""
         self.assertEqual(self.crontab[0].command, u"ůțƒ_command")
 
     def test_05_comment(self):
-        """Comment String"""
+        """Read Comment String"""
         self.assertEqual(self.crontab[0].comment, u'ůțƒ_comment')
 
+    def test_06_unicode(self):
+        """Write New via Unicode"""
+        c = self.crontab.new(command=u"ůțƒ_command",  comment=u'ůțƒ_comment')
+        self.assertEqual(c.command, u"ůțƒ_command")
+        self.assertEqual(c.comment, u"ůțƒ_comment")
+        self.crontab.render()
+
+    def test_07_utf8(self):
+        """Write New via UTF-8"""
+        c = self.crontab.new(command='\xc5\xaf\xc8\x9b\xc6\x92_command',
+                             comment='\xc5\xaf\xc8\x9b\xc6\x92_comment')
+        self.crontab.render()
 
 if __name__ == '__main__':
     test_support.run_unittest(

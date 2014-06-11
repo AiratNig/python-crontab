@@ -283,9 +283,9 @@ class CronTab(object):
         crons = []
         for cron in self.lines:
             crons.append(unicode(cron))
-        result = '\n'.join(crons)
-        if result and result[-1] not in ('\n', '\r'):
-            result += '\n'
+        result = u'\n'.join(crons)
+        if result and result[-1] not in (u'\n', u'\r'):
+            result += u'\n'
         return result
 
     def new(self, command='', comment=''):
@@ -454,11 +454,15 @@ class CronItem(object):
 
     def render(self):
         """Render this set cron-job to a string"""
-        result = "%s %s" % (str(self.slices), self.command)
+        if type(self.command) is str and not PY3:
+            self.command = unicode(self.command, 'utf-8')
+        result = u"%s %s" % (str(self.slices), self.command)
         if self.comment:
-            result += " # " + self.comment
+            if type(self.comment) is str and not PY3:
+                self.comment = unicode(self.comment, 'utf-8')
+            result += u" # " + self.comment
         if not self.enabled:
-            result = "# " + result
+            result = u"# " + result
         return result
 
     def every_reboot(self):
