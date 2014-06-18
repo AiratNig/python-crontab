@@ -76,8 +76,14 @@ class RangeTestCase(unittest.TestCase):
         """)
         self.assertEqual(len(tab), 1)
         
+    def test_04_zero_seq(self):
+        tab = CronTab(tab="""
+*/0 * * * * command
+        """)
+        self.assertEqual(len(tab), 0)
 
-    def test_04_sunday(self):
+
+    def test_05_sunday(self):
         tab = CronTab(tab="""
 * * * * 7 command
 * * * * 5-7 command

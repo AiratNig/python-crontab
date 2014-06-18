@@ -950,6 +950,8 @@ class CronRange(object):
         if value.count('/') == 1:
             value, seq = value.split('/')
             self.seq = self.slice.filter_v(seq)
+            if self.seq < 1 or self.seq > self.slice.max - 1:
+                raise ValueError("Sequence can not be divided by zero or max")
         if value.count('-') == 1:
             vfrom, vto = value.split('-')
             self.vfrom = self.slice.filter_v(vfrom)
