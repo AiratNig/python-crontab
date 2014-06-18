@@ -24,10 +24,10 @@ import os
 import sys
 
 sys.path.insert(0, '../')
-os.environ['SystemV_TEST'] = 'True'
+os.environ['SYSTEMV_TEST'] = 'True'
 
 import unittest
-from crontab import CronTab, SystemV
+from crontab import CronTab, SYSTEMV
 try:
     from test import test_support
 except ImportError:
@@ -45,7 +45,7 @@ class CompatTestCase(unittest.TestCase):
 
     def test_00_enabled(self):
         """Test Compatability Mode"""
-        self.assertTrue(SystemV)
+        self.assertTrue(SYSTEMV)
 
     def test_01_addition(self):
         """New Job Rendering"""

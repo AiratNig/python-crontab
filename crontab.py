@@ -135,8 +135,10 @@ WINOS = platform.system() == 'Windows'
 SYSTEMV = not WINOS and os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
 SYSTEMV = SYSTEMV or os.getenv('SYSTEMV_TEST')
 
+TESTING = False
 CRONCMD = "/usr/bin/crontab"
 if sys.argv[0].startswith('test_'):
+    TESTING = True
     CRONCMD = './data/crontest'
 
 try:
@@ -386,7 +388,6 @@ class CronItem(object):
     def __init__(self, line=None, command='', comment='', cron=None):
         self.cron = cron
         self.valid = False
-        self.slices = []
         self.enabled = True
         self.special = False
         self.comment = comment
@@ -671,6 +672,10 @@ class CronSlices(list):
         for a, b in zip(self, slices):
             try:
                 a.parse(b)
+            except ValueError as error:
+                if not TESTING:
+                    sys.stderr.write("WARNING: %s\n" % str(error))
+                return False
             except Exception:
                 return False
         return True
@@ -726,6 +731,10 @@ class CronSlices(list):
         return self.render() == CronSlices(arg).render()
 
 
+class SundayError(KeyError):
+    pass
+
+
 class CronSlice(object):
     """Cron slice object which shows a time pattern"""
     def __init__(self, info, value=None):
@@ -748,9 +757,10 @@ class CronSlice(object):
             else:
                 try:
                     self.parts.append(self._v(part))
-                except ValueError:
-                    raise ValueError('Unknown cron time part for %s: %s' % (
-                        self.name, part))
+                except SundayError:
+                    self.parts.append(0)
+                except ValueError as err:
+                    raise ValueError('%s:%s/%s' % (str(err), self.name, part))
 
     def render(self, resolve=False):
         """Return the slice rendered as a crontab.
@@ -786,7 +796,10 @@ class CronSlice(object):
         if not opts.get('also', False):
             self.clear()
         for av in n_value:
-            self.parts += self._v(av),
+            try:
+                self.parts += self._v(av),
+            except SundayError:
+                self.parts += 0,
         return self.parts
 
     def during(self, vfrom, vto, also=False):
@@ -855,9 +868,8 @@ class CronSlice(object):
         except KeyError:
             raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
 
-        # If it's a sunday, make it a sunday (force 7 to 0)
-        if self.max == 6 and v == 7:
-            out = 0
+        if self.max == 6 and int(out) == 7:
+            raise SundayError("Detected Sunday as 7 instead of 0!")
 
         if int(out) < self.min or int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
@@ -937,11 +949,14 @@ class CronRange(object):
         """Parse a ranged value in a cronjob"""
         if value.count('/') == 1:
             value, seq = value.split('/')
-            self.seq = int(seq)
+            self.seq = self.slice.filter_v(seq)
         if value.count('-') == 1:
             vfrom, vto = value.split('-')
             self.vfrom = self.slice.filter_v(vfrom)
-            self.vto = self.slice.filter_v(vto)
+            try:
+                self.vto = self.slice.filter_v(vto)
+            except SundayError:
+                self.vto = 6
         elif value == '*':
             self.all()
         else:
