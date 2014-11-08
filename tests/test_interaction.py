@@ -64,10 +64,6 @@ class BasicTestCase(unittest.TestCase):
     def setUp(self):
         self.crontab = CronTab(tabfile='data/test.tab')
 
-    def test_00_root(self):
-        """Not Root User"""
-        self.assertFalse(self.crontab.root)
-
     def test_01_presevation(self):
         """All Entries Re-Rendered Correctly"""
         results = RESULT_TAB.split('\n')

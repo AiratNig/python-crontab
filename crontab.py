@@ -91,6 +91,7 @@ import os
 import re
 import sys
 
+import codecs
 import tempfile
 import subprocess as sp
 
@@ -229,7 +230,7 @@ class CronTab(object):
             lines = self.intab.split('\n')
         elif filename:
             self.filen = filename
-            with open(filename, 'r') as fhl:
+            with codecs.open(filename, 'r', encoding='utf-8') as fhl:
                 lines = fhl.readlines()
         else:
             (out, err) = pipeOpen(CRONCMD, l='', u=self.user).communicate()
