@@ -27,7 +27,7 @@ import sys
 sys.path.insert(0, '../')
 
 import unittest
-from crontab import CronTab, __doc__
+import crontab
 try:
     from test import test_support
 except ImportError:
@@ -39,6 +39,8 @@ class DummyStdout(object):
 
 BASIC = '@hourly firstcommand\n\n'
 USER = '\n*/4 * * * * user_command # user_comment\n\n\n'
+crontab.CRONCMD = './data/crontest'
+crontab.TESTING = True
 
 def flush():
     pass
@@ -47,26 +49,26 @@ class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
     def test_01_empty(self):
         """Open system crontab"""
-        cron = CronTab()
+        cron = crontab.CronTab()
         self.assertEqual(cron.render(), "")
 
     def test_02_user(self):
         """Open a user's crontab"""
-        cron = CronTab(user='basic')
+        cron = crontab.CronTab(user='basic')
         self.assertEqual(cron.render(), BASIC)
 
     def test_03_usage(self):
         """Dont modify crontab"""
-        cron = CronTab(tab='')
+        cron = crontab.CronTab(tab='')
         sys.stdout = DummyStdout()
         sys.stdout.flush = flush
-        exec(__doc__)
+        exec(crontab.__doc__)
         sys.stdout = sys.__stdout__
         self.assertEqual(cron.render(), '')
 
     def test_04_username(self):
         """Username is True"""
-        cron = CronTab(user=True)
+        cron = crontab.CronTab(user=True)
         self.assertNotEqual(cron.user, True)
         self.assertEqual(cron.render(), USER)
 

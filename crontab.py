@@ -138,9 +138,6 @@ SYSTEMV = SYSTEMV or os.getenv('SYSTEMV_TEST')
 
 TESTING = False
 CRONCMD = "/usr/bin/crontab"
-if sys.argv[0].startswith('test_'):
-    TESTING = True
-    CRONCMD = './data/crontest'
 
 try:
     import pwd
