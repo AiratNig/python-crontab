@@ -98,7 +98,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
