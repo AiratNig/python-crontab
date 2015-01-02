@@ -98,7 +98,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.8.2'
+__version__ = '1.9.0'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -184,7 +184,12 @@ class CronTab(object):
     """
     Crontab object which can access any time based cron using the standard.
 
-    user    - Set the user of the crontab (defaults to $USER)
+    user    - Set the user of the crontab (default: None)
+      * 'user' = Load from $username's crontab (instead of tab or tabfile)
+      * None   = Don't load anything from any user crontab.
+      * True   = Load from current $USER's crontab (unix only)
+      * False  = This is a system crontab, each command has a username
+
     tab     - Use a string variable as the crontab instead of installed crontab
     tabfile - Use a file for the crontab instead of installed crontab
     log     - Filename for logfile instead of /var/log/syslog
@@ -196,6 +201,7 @@ class CronTab(object):
         self.filen = None
         # Protect windows users
         self.root = not WINOS and os.getuid() == 0
+        # Storing user flag / username
         self._user = user
         # Load string or filename as inital crontab
         self.intab = tab
@@ -223,13 +229,14 @@ class CronTab(object):
         """
         self.crons = []
         self.lines = []
+        lines = []
         if self.intab is not None:
             lines = self.intab.split('\n')
         elif filename:
             self.filen = filename
             with codecs.open(filename, 'r', encoding='utf-8') as fhl:
                 lines = fhl.readlines()
-        else:
+        elif self.user:
             (out, err) = pipeOpen(CRONCMD, l='', u=self.user).communicate()
             if err and 'no crontab for' in str(err):
                 pass
@@ -288,13 +295,15 @@ class CronTab(object):
             result += u'\n'
         return result
 
-    def new(self, command='', comment=''):
+    def new(self, command='', comment='', user=None):
         """
         Create a new cron with a command and comment.
 
         Returns the new CronItem object.
         """
-        item = CronItem(command=command, comment=comment, cron=self)
+        if not user and self.user is False:
+            raise ValueError("User is required for system crontabs.")
+        item = CronItem(command=command, comment=comment, user=user, cron=self)
         self.crons.append(item)
         self.lines.append(item)
         return item
@@ -383,9 +392,10 @@ class CronItem(object):
     An item which objectifies a single line of a crontab and
     May be considered to be a cron job object.
     """
-    def __init__(self, line=None, command='', comment='', cron=None):
-        self.cron = cron
-        self.valid = False
+    def __init__(self, line=None, command='', comment='', user=None, cron=None):
+        self.cron    = cron
+        self.user    = user
+        self.valid   = False
         self.enabled = True
         self.special = False
         self.comment = comment
@@ -431,7 +441,13 @@ class CronItem(object):
     def _set_parse(self, result):
         if not result:
             return
-        self.set_command(result[0][-3])
+        if self.cron.user == False:
+            # Special flag to look for per-command user
+            (user, cmd) = result[0][-3].split(' ', 1)
+            self.set_command(cmd)
+            self.user = user
+        else:
+            self.set_command(result[0][-3])
 
         self.valid = self.setall(*result[0][:-3])
         self.comment = result[0][-1]
@@ -455,7 +471,12 @@ class CronItem(object):
         """Render this set cron-job to a string"""
         if type(self.command) is str and not PY3:
             self.command = unicode(self.command, 'utf-8')
-        result = u"%s %s" % (str(self.slices), self.command)
+        user = ''
+        if self.cron.user is False:
+            if not self.user:
+                raise ValueError("Job to system-cron format, no user set!")
+            user = self.user + ' '
+        result = u"%s %s%s" % (str(self.slices), user, self.command)
         if self.comment:
             if type(self.comment) is str and not PY3:
                 self.comment = unicode(self.comment, 'utf-8')
