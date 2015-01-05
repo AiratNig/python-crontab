@@ -4,18 +4,15 @@ import os
 import sys
 
 args = sys.argv[1:]
-user = None
 
+user = 'user'
 if '-u' in args:
     user = args[args.index('-u')+1]
 
-if user == None:
-    sys.stderr.write("no crontab for nouser\n")
-    sys.exit(1)
-
 if '-l' in args:
     if not os.path.exists('data/%s.tab' % user):
-        user = 'user'
+        sys.stderr.write("no crontab for %s\n" % user)
+        sys.exit(1)
     fhl = open('data/%s.tab' % user, 'r')
     print fhl.read()
 else:

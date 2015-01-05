@@ -72,6 +72,11 @@ class UseTestCase(unittest.TestCase):
         self.assertNotEqual(cron.user, True)
         self.assertEqual(cron.render(), USER)
 
+    def test_05_nouser(self):
+        """Username doesn't exist"""
+        cron = crontab.CronTab(user='nouser')
+        self.assertEqual(cron.render(), '')
+
 if __name__ == '__main__':
     test_support.run_unittest(
        UseTestCase,

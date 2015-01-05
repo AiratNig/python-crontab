@@ -98,7 +98,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.9.0'
+__version__ = '1.9.1'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -222,6 +222,14 @@ class CronTab(object):
             return pwd.getpwuid(os.getuid())[0]
         return self._user
 
+    @property
+    def user_opt(self):
+        # Fedora and Mac require the current user to not specify
+        # But Ubuntu/Debian doesn't care. Be careful here.
+        if self._user and self._user is not True:
+            return {'u': self._user}
+        return {}
+
     def read(self, filename=None):
         """
         Read in the crontab from the system into the object, called
@@ -237,7 +245,7 @@ class CronTab(object):
             with codecs.open(filename, 'r', encoding='utf-8') as fhl:
                 lines = fhl.readlines()
         elif self.user:
-            (out, err) = pipeOpen(CRONCMD, l='', u=self.user).communicate()
+            (out, err) = pipeOpen(CRONCMD, l='', **self.user_opt).communicate()
             if err and 'no crontab for' in str(err):
                 pass
             elif err:
@@ -274,7 +282,7 @@ class CronTab(object):
 
         if not self.filen:
             # Add the entire crontab back to the user crontab
-            pipeOpen(CRONCMD, path, u=self.user).wait()
+            pipeOpen(CRONCMD, path, **self.user_opt).wait()
             os.unlink(path)
 
     def write_to_user(self, user=None):
