@@ -98,7 +98,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.9.1'
+__version__ = '1.9.2'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -290,7 +290,7 @@ class CronTab(object):
         self.filen = None
         self.intab = None
         if user is not None:
-            self.user = user
+            self._user = user
         self.write()
 
     def render(self):

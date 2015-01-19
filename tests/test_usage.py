@@ -37,6 +37,7 @@ class DummyStdout(object):
     def write(self, text):
         pass
 
+DATA = './data/'
 BASIC = '@hourly firstcommand\n\n'
 USER = '\n*/4 * * * * user_command # user_comment\n\n\n'
 crontab.CRONCMD = './data/crontest'
@@ -47,6 +48,9 @@ def flush():
 
 class UseTestCase(unittest.TestCase):
     """Test use documentation in crontab."""
+    def setUp(self):
+        self.filenames = []
+
     def test_01_empty(self):
         """Open system crontab"""
         cron = crontab.CronTab()
@@ -76,6 +80,20 @@ class UseTestCase(unittest.TestCase):
         """Username doesn't exist"""
         cron = crontab.CronTab(user='nouser')
         self.assertEqual(cron.render(), '')
+
+    def test_06_touser(self):
+        """Write to use API"""
+        cron = crontab.CronTab(tab=USER)
+        cron.write_to_user('bob')
+        filename = os.path.join(DATA, 'bob.tab')
+        self.filenames.append(filename)
+        self.assertTrue(os.path.exists(filename))
+
+    def tearDown(self):
+        for filename in self.filenames:
+            if os.path.exists(filename):
+                os.unlink(filename)
+
 
 if __name__ == '__main__':
     test_support.run_unittest(
