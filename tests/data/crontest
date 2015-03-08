@@ -15,7 +15,7 @@ if '-l' in args:
         sys.stderr.write("no crontab for %s\n" % user)
         sys.exit(1)
     fhl = open('data/%s.tab' % user, 'r')
-    print fhl.read()
+    print(fhl.read())
 else:
     for filename in args:
         if filename[0] == '-' or filename == user:
