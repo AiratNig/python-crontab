@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright (C) 2015 Martin Owens
 #
@@ -63,7 +63,12 @@ class SystemCronTestCase(unittest.TestCase):
 
     def test_03_failure(self):
         """Fail when no user"""
-        self.assertRaises(ValueError, self.crontab.new, command='im_brian')
+        with self.assertRaises(ValueError):
+            self.crontab.new(command='im_brian')
+        cron = self.crontab.new(user='user', command='no_im_brian')
+        cron.user = None
+        with self.assertRaises(ValueError):
+            cron.render()
 
     def test_04_remove(self):
         """Remove the user flag"""

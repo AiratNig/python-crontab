@@ -19,6 +19,7 @@ import os
 import re
 import sys
 import string
+import codecs
 import platform
 
 py3 = platform.python_version()[0] == '3'
@@ -37,17 +38,14 @@ class LogReader(object):
     """Opens a Log file, reading backwards and watching for changes"""
     def __init__(self, filename, mass=4096):
         self.filename = filename
-        if py3:
-            self.pipe = open(filename, 'r', encoding='utf-8')
-        else:
-            self.pipe = open(filename, 'r')
+        self.pipe     = codecs.open(filename, 'r', encoding='utf-8')
         self.mass     = mass
         self.size     = -1
         self.read     = -1
 
     def readlines(self, until=0):
         """Iterator for reading lines from a file backwards"""
-        if not self.pipe:
+        if not self.pipe or self.pipe.closed:
             raise IOError("Can't readline, no opened file.")
         # Always seek to the end of the file, this accounts for file updates
         # that happen during our running process.
@@ -79,9 +77,7 @@ class LogReader(object):
 
 
 class CronLog(LogReader):
-    def __init__(self, filename=None, user=None):
-        if not filename:
-            filename = '/var/log/syslog'
+    def __init__(self, filename='/var/log/syslog', user=None):
         LogReader.__init__(self, filename)
         self.user = user
 
@@ -107,7 +103,4 @@ class ProgramLog(object):
         for entry in self.log:
             if entry['cmd'] == unicode(self.command):
                 yield entry
-            #else:
-            #    print "'%s' != '%s'" % (entry['cmd'], self.command)
-
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright (C) 2012 Jay Sigbrandt <jsigbrandt@slb.com>
 #                    Martin Owens <doctormo@gmail.com>
@@ -24,8 +24,6 @@ Test crontab usage.
 import os
 import sys
 
-sys.path.insert(0, '../')
-
 import unittest
 import crontab
 try:
@@ -33,15 +31,15 @@ try:
 except ImportError:
     from test import support as test_support
 
+TEST_DIR = os.path.dirname(__file__)
+
 class DummyStdout(object):
     def write(self, text):
         pass
 
-DATA = './data/'
 BASIC = '@hourly firstcommand\n\n'
 USER = '\n*/4 * * * * user_command # user_comment\n\n\n'
-crontab.CRONCMD = './data/crontest'
-crontab.TESTING = True
+crontab.CRONCMD = "%s %s" % (sys.executable, os.path.join(TEST_DIR, 'data', 'crontest'))
 
 def flush():
     pass
@@ -55,6 +53,7 @@ class UseTestCase(unittest.TestCase):
         """Open system crontab"""
         cron = crontab.CronTab()
         self.assertEqual(cron.render(), "")
+        self.assertEqual(cron.__unicode__(), "")
 
     def test_02_user(self):
         """Open a user's crontab"""
@@ -66,7 +65,10 @@ class UseTestCase(unittest.TestCase):
         cron = crontab.CronTab(tab='')
         sys.stdout = DummyStdout()
         sys.stdout.flush = flush
-        exec(crontab.__doc__)
+        try:
+            exec(crontab.__doc__)
+        except ImportError:
+            pass
         sys.stdout = sys.__stdout__
         self.assertEqual(cron.render(), '')
 
@@ -85,9 +87,24 @@ class UseTestCase(unittest.TestCase):
         """Write to use API"""
         cron = crontab.CronTab(tab=USER)
         cron.write_to_user('bob')
-        filename = os.path.join(DATA, 'bob.tab')
+        filename = os.path.join(TEST_DIR, 'data', 'bob.tab')
         self.filenames.append(filename)
         self.assertTrue(os.path.exists(filename))
+
+    def test_07_ioerror(self):
+        """No filename ioerror"""
+        with self.assertRaises(IOError):
+            cron = crontab.CronTab(user='error')
+            cron.read()
+
+    def test_08_cronitem(self):
+        """CronItem Standalone"""
+        item = crontab.CronItem(line='noline')
+        self.assertTrue(item.is_enabled())
+        with self.assertRaises(UnboundLocalError):
+            item.delete()
+        item.command = str('nothing')
+        self.assertEqual(item.render(), '* * * * * nothing')
 
     def tearDown(self):
         for filename in self.filenames:

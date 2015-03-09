@@ -98,7 +98,7 @@ import subprocess as sp
 from datetime import date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.9.2'
+__version__ = '1.9.3'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -134,37 +134,16 @@ import platform
 PY3 = platform.python_version()[0] == '3'
 WINOS = platform.system() == 'Windows'
 SYSTEMV = not WINOS and os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
-SYSTEMV = SYSTEMV or os.getenv('SYSTEMV_TEST')
 
-TESTING = False
-CRONCMD = "/usr/bin/crontab"
-
-try:
+if not WINOS:
     import pwd
-except ImportError:
-    pwd = None
+
+CRONCMD = "/usr/bin/crontab"
 
 if PY3:
     # pylint: disable=W0622
     unicode = str
     basestring = str
-
-try:
-    # Croniter is an optional import
-    from croniter.croniter import croniter
-
-    class Croniter(croniter):
-        """Same as normal croniter, but always return datetime objects"""
-        def get_next(self, type_ref=datetime):
-            return croniter.get_next(self, type_ref)
-
-        def get_prev(self, type_ref=datetime):
-            return croniter.get_prev(self, type_ref)
-
-        def get_current(self, type_ref=datetime):
-            return croniter.get_current(self, type_ref)
-except ImportError:
-    Croniter = None
 
 
 def pipeOpen(cmd, *args, **flags):
@@ -172,7 +151,7 @@ def pipeOpen(cmd, *args, **flags):
 
     a. keyword args are flags and always appear /before/ arguments for bsd
     """
-    l = (cmd,)
+    l = tuple(cmd.split(' '))
     for (k,v) in flags.items():
         if v is not None:
             l += len(k)==1 and ("-%s" % (k,), str(v)) or ("--%s=%s" % (k,v),)
@@ -406,7 +385,7 @@ class CronItem(object):
         self.valid   = False
         self.enabled = True
         self.special = False
-        self.comment = comment
+        self.comment = None
         self.command = None
 
         self._log = None
@@ -414,9 +393,10 @@ class CronItem(object):
         # Initalise five cron slices using static info.
         self.slices = CronSlices()
 
+        self.set_comment(comment)
+
         if line and line.strip():
             self.parse(line.strip())
-
         elif command:
             self.set_command(command)
             self.valid = True
@@ -424,7 +404,7 @@ class CronItem(object):
     def delete(self):
         """Delete this item and remove it from it's parent"""
         if not self.cron:
-            sys.stderr.write("Cron item is not associated with a crontab!\n")
+            raise UnboundLocalError("Cron item is not associated with a crontab!")
         else:
             self.cron.remove(self)
 
@@ -480,7 +460,7 @@ class CronItem(object):
         if type(self.command) is str and not PY3:
             self.command = unicode(self.command, 'utf-8')
         user = ''
-        if self.cron.user is False:
+        if self.cron and self.cron.user is False:
             if not self.user:
                 raise ValueError("Job to system-cron format, no user set!")
             user = self.user + ' '
@@ -544,10 +524,25 @@ class CronItem(object):
         """Return a croniter schedule is available."""
         if not date_from:
             date_from = datetime.now()
-        if Croniter:
-            return Croniter(self.slices.clean_render(), date_from)
-        raise ImportError("Croniter is not available. Please install croniter"
+        try:
+            # Croniter is an optional import
+            from croniter.croniter import croniter
+        except ImportError:
+            raise ImportError("Croniter is not available. Please install croniter"
                           " python module via pip or your package manager")
+
+        class Croniter(croniter):
+            """Same as normal croniter, but always return datetime objects"""
+            def get_next(self, type_ref=datetime):
+                return croniter.get_next(self, type_ref)
+
+            def get_prev(self, type_ref=datetime):
+                return croniter.get_prev(self, type_ref)
+
+            def get_current(self, type_ref=datetime):
+                return croniter.get_current(self, type_ref)
+
+        return Croniter(self.slices.clean_render(), date_from)
 
     @property
     def log(self):
@@ -620,8 +615,7 @@ class CronItem(object):
 
     def __unicode__(self):
         if not self.is_valid():
-            sys.stderr.write("Ignoring invalid crontab line\n")
-            return "# " + unicode(self.render())
+            raise ValueError('Refusing to render invalid crontab. Disable to continue.')
         return self.render()
 
 
@@ -694,14 +688,13 @@ class CronSlices(list):
                 return self.setall(SPECIALS[to])
 
         if id(slices) == id(self):
-            raise ValueError("Can not set cron to itself!")
+            raise AssertionError("Can not set cron to itself!")
 
         for a, b in zip(self, slices):
             try:
                 a.parse(b)
             except ValueError as error:
-                if not TESTING:
-                    sys.stderr.write("WARNING: %s\n" % str(error))
+                sys.stderr.write("WARNING: %s\n" % str(error))
                 return False
             except Exception:
                 return False

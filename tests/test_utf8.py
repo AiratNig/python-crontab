@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2014 Martin Owens
@@ -24,8 +24,6 @@ Test crontab use of UTF-8 filenames and strings
 import os
 import sys
 
-sys.path.insert(0, '../')
-
 import unittest
 from crontab import CronTab, PY3
 try:
@@ -33,13 +31,15 @@ try:
 except ImportError:
     from test import support as test_support
 
+TEST_DIR = os.path.dirname(__file__)
+
 if PY3:
     unicode = str
 
 content = """
 */4 * * * * ůțƒ_command # ůțƒ_comment
 """
-filename = "data/output-ůțƒ-8.tab"
+filename = os.path.join(TEST_DIR, 'data', 'output-ůțƒ-8.tab')
 
 class Utf8TestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
