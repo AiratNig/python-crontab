@@ -56,14 +56,16 @@ class LogReader(object):
 
         while location > until:
             location -= self.mass
+            mass = self.mass
             if location < 0:
+                mass = self.mass + location
                 location = 0
             self.pipe.seek(location)
-            data = self.pipe.read(self.mass) + halfline
-            data = data.strip().split('\n')
+            line = self.pipe.read(mass) + halfline
+            data = line.split('\n')
             if location != 0:
                 halfline = data.pop(0)
-            loc = location + self.mass
+            loc = location + mass
             data.reverse()
             for line in data:
                 if line.strip() == '':
