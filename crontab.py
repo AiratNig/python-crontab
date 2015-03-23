@@ -431,9 +431,11 @@ class CronItem(object):
             return
         if self.cron.user == False:
             # Special flag to look for per-command user
-            (user, cmd) = result[0][-3].split(' ', 1)
-            self.set_command(cmd)
-            self.user = user
+            user_cmd = result[0][-3].split(' ', 1)
+            if len(user_cmd) == 2:
+                (user, cmd) = user_cmd
+                self.set_command(cmd)
+                self.user = user
         else:
             self.set_command(result[0][-3])
 
