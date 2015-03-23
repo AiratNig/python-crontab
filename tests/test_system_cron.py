@@ -81,11 +81,16 @@ class SystemCronTestCase(unittest.TestCase):
 
     def test_05_comments(self):
         """Comment with six parts parses successfully"""
-        SIX_PART_TAB = """
+        crontab = CronTab(user=False, tab="""
 #a system_comment that has six parts_will_fail_to_parse
-"""
-        self.crontab = CronTab(tab=SIX_PART_TAB, user=False)
+        """)
 
+    def test_06_recreation(self):
+        """Input doesn't change on save"""
+        crontab = CronTab(user=False, tab="* * * * * user command")
+        self.assertEqual(str(crontab), "* * * * * user command\n")
+        crontab = CronTab(user=False, tab="* * * * * user command\n")
+        self.assertEqual(str(crontab), "* * * * * user command\n")
 
 if __name__ == '__main__':
     test_support.run_unittest(
