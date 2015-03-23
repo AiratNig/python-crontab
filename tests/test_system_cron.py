@@ -79,6 +79,13 @@ class SystemCronTestCase(unittest.TestCase):
         self.crontab.new(command='now_go_away')
 
 
+    def test_05_comments(self):
+        """Comment with six parts parses successfully"""
+        SIX_PART_TAB = """
+#a system_comment that has six parts_will_fail_to_parse
+"""
+        self.crontab = CronTab(tab=SIX_PART_TAB, user=False)
+
 
 if __name__ == '__main__':
     test_support.run_unittest(
