@@ -23,6 +23,7 @@ Test crontab use of UTF-8 filenames and strings
 import os
 import sys
 
+import locale
 import unittest
 from crontab import CronTab, PY3
 try:
@@ -51,6 +52,7 @@ class Utf8TestCase(unittest.TestCase):
 
     def test_02_write(self):
         """Write/Read UTF-8 Filename"""
+        self.assertEqual(locale.getpreferredencoding(), 'UTF-8')
         self.crontab.write(filename)
         crontab = CronTab(tabfile=filename)
         self.assertTrue(crontab)
