@@ -49,8 +49,12 @@ class CroniterTestCase(unittest.TestCase):
 
     def test_00_nocroniter(self):
         """No Croniter"""
-        # Remove croniter if importer before.
-        sys.modules.pop('croniter', None)
+        # Remove croniter if imported before.
+        for i in range(1, 4):
+            name = '.'.join((['croniter'] * i))
+            if name in sys.modules:
+                del sys.modules[name]
+
         old, sys.path = sys.path, []
         with self.assertRaises(ImportError):
             self.job.schedule(datetime(2001, 10, 11, 1, 12, 10))
