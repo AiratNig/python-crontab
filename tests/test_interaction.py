@@ -106,6 +106,13 @@ class InteractionTestCase(unittest.TestCase):
         job.dow.on(7)
         self.assertEqual(job.render(), '* 4 5 6 0 fields')
 
+    def test_05_multiple_fields(self):
+        job = self.crontab.new(command='fields')
+        job.hour.on(4, 6, 7)
+        self.assertEqual(job.render(), '* 4,6,7 * * * fields')
+        job.dow.on('SUN', 'FRI')
+        self.assertEqual(job.render(), '* 4,6,7 * * SUN,FRI fields')
+
     def test_06_clear(self):
         """Render Hours Days and Weeks"""
         job = self.crontab.new(command='clear')
