@@ -46,6 +46,8 @@ class EveryTestCase(unittest.TestCase):
         for job in self.crontab:
             job.every(3).minutes()
             self.assertEqual(job.slices.clean_render(), '*/3 * * * *')
+            job.minutes.every(5)
+            self.assertEqual(job.slices.clean_render(), '*/5 * * * *')
 
     def test_01_hours(self):
         """Every Hours"""
@@ -91,6 +93,15 @@ class EveryTestCase(unittest.TestCase):
             job.every_reboot()
             self.assertEqual(job.slices.render(), '@reboot')
             self.assertEqual(job.slices.clean_render(), '* * * * *')
+
+    def test_08_newitem(self):
+        """Every on New Item"""
+        job = self.crontab.new(command='hourly')
+        job.every().hour()
+        self.assertEqual(job.slices.render(), '@hourly')
+        job = self.crontab.new(command='firstly')
+        job.hours.every(2)
+        self.assertEqual(job.slices.render(), '* */2 * * *')
 
 if __name__ == '__main__':
     test_support.run_unittest(
