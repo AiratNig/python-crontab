@@ -186,6 +186,11 @@ Write to some other user's crontab::
 
     cron.write_to_user( user='bob' )
 
+Validate a cron time string::
+
+    from crontab import CronSlices
+    bool = CronSlices.is_valid('0/2 * * * *')
+
 Proceeding Unit Confusion
 =========================
 
