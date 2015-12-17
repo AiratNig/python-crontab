@@ -152,6 +152,14 @@ def pipeOpen(cmd, *args, **flags):
     l += tuple(args)
     return sp.Popen(tuple(a for a in l if a), stdout=sp.PIPE, stderr=sp.PIPE)
 
+class dynamicmethod(object):
+    """Decorator like @classmethod but will work for both obj and cls"""
+    def __init__(self, f):
+        self.f = f
+
+    def __get__(self, obj, type=None):
+        return lambda *args: self.f(obj or type, *args)
+
 
 class CronTab(object):
     """
@@ -657,6 +665,17 @@ class CronSlices(list):
         if args and not self.setall(*args):
             raise ValueError("Can't set cron value to: %s" % str(args))
 
+    @dynamicmethod
+    def is_valid(cls, *args):
+        """Returns true if the arguments are valid cron pattern"""
+        if type(cls) == CronSlices:
+            args = [cls]
+            cls = type(cls)
+        try:
+            return bool(cls(*args))
+        except:
+            return False
+
     def setall(self, to, *slices):
         """Parses the various ways date/time frequency can be specified"""
         self.clear()
@@ -671,14 +690,17 @@ class CronSlices(list):
                 slices = to.strip().split(' ')
             elif to.strip()[0] == '@':
                 to = to[1:]
+                slices = None
             else:
                 slices = [to]
 
-            if to == 'reboot':
+            if 'reboot' in (to, to[1:]):
                 self.special = '@reboot'
                 return True
             elif to in SPECIALS.keys():
                 return self.setall(SPECIALS[to])
+            elif not slices:
+                return False
 
         if id(slices) == id(self):
             raise AssertionError("Can not set cron to itself!")

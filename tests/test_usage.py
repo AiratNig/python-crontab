@@ -105,6 +105,28 @@ class UseTestCase(unittest.TestCase):
         item.command = str('nothing')
         self.assertEqual(item.render(), '* * * * * nothing')
 
+    def test_09_slice_validation(self):
+        """CronSlices class and objects can validate"""
+        CronSlices = crontab.CronSlices
+        self.assertTrue(CronSlices('* * * * *').is_valid())
+        self.assertTrue(CronSlices.is_valid('* * * * *'))
+        self.assertTrue(CronSlices.is_valid('*/2 * * * *'))
+        self.assertTrue(CronSlices.is_valid('* 1,2 * * *'))
+        self.assertTrue(CronSlices.is_valid('* * 1-5 * *'))
+        self.assertTrue(CronSlices.is_valid('* * * * MON-WED'))
+        self.assertTrue(CronSlices.is_valid('@reboot'))
+
+        sliced = CronSlices('* * * * *')
+        sliced[0].parts = [300]
+        self.assertEqual(str(sliced), '300 * * * *')
+        self.assertFalse(sliced.is_valid())
+        self.assertFalse(CronSlices.is_valid('P'))
+        self.assertFalse(CronSlices.is_valid('*/61 * * * *'))
+        self.assertFalse(CronSlices.is_valid('* 1,300 * * *'))
+        self.assertFalse(CronSlices.is_valid('* * 50-1 * *'))
+        self.assertFalse(CronSlices.is_valid('* * * * FRO-TOO'))
+        self.assertFalse(CronSlices.is_valid('@retool'))
+
     def tearDown(self):
         for filename in self.filenames:
             if os.path.exists(filename):
