@@ -152,6 +152,12 @@ def pipeOpen(cmd, *args, **flags):
     l += tuple(args)
     return sp.Popen(tuple(a for a in l if a), stdout=sp.PIPE, stderr=sp.PIPE)
 
+def _unicode(text):
+    """Convert to the best string format for this python version"""
+    if type(text) is str and not PY3:
+        return unicode(text, 'utf-8')
+    return text
+
 class dynamicmethod(object):
     """Decorator like @classmethod but will work for both obj and cls"""
     def __init__(self, f):
@@ -420,8 +426,7 @@ class CronItem(object):
 
     def parse(self, line):
         """Parse a cron line string and save the info as the objects."""
-        if type(line) is str and not PY3:
-            line = unicode(line, 'utf-8')
+        line = _unicode(line)
         if not line or line[0] == '#':
             self.enabled = False
             line = line[1:].strip()
@@ -458,8 +463,7 @@ class CronItem(object):
 
     def render(self):
         """Render this set cron-job to a string"""
-        if type(self.command) is str and not PY3:
-            self.command = unicode(self.command, 'utf-8')
+        self.command = _unicode(self.command)
         user = ''
         if self.cron and self.cron.user is False:
             if not self.user:
@@ -467,8 +471,7 @@ class CronItem(object):
             user = self.user + ' '
         result = u"%s %s%s" % (str(self.slices), user, self.command)
         if self.comment:
-            if type(self.comment) is str and not PY3:
-                self.comment = unicode(self.comment, 'utf-8')
+            self.comment = _unicode(self.comment)
             result += u" # " + self.comment
         if not self.enabled:
             result = u"# " + result

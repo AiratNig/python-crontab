@@ -78,7 +78,21 @@ class Utf8TestCase(unittest.TestCase):
         """Write New via UTF-8"""
         c = self.crontab.new(command='\xc5\xaf\xc8\x9b\xc6\x92_command',
                              comment='\xc5\xaf\xc8\x9b\xc6\x92_comment')
-        self.crontab.render()
+        self.assertEqual(self.crontab.render(), u"""
+*/4 * * * * ůțƒ_command # ůțƒ_comment
+
+* * * * * ůțƒ_command # ůțƒ_comment
+""")
+        self.assertEqual(type(c.command), unicode)
+        self.assertEqual(type(c.comment), unicode)
+
+    def test_08_utf8_str(self):
+        """Test UTF8 (non unicode) strings"""
+        self.crontab[0].command = '￡１２'
+        self.crontab[0].comment = '￼𝗔𝗕𝗖𝗗'
+        self.assertEqual(self.crontab.render(), u"""
+*/4 * * * * ￡１２ # ￼𝗔𝗕𝗖𝗗
+""")     
 
 if __name__ == '__main__':
     test_support.run_unittest(
