@@ -238,10 +238,14 @@ class CronTab(object):
             else:
                 self.lines.append(line.replace('\n', ''))
 
-    def write(self, filename=None):
+    def write(self, filename=None, user=None):
         """Write the crontab to it's source or a given filename."""
         if filename:
             self.filen = filename
+        elif user is not None:
+            self.filen = None
+            self.intab = None
+            self._user = user
 
         # Add to either the crontab or the internal tab.
         if self.intab is not None:
@@ -268,13 +272,9 @@ class CronTab(object):
                 os.unlink(path)
                 raise IOError("Can not write to nowhere; please specify user or filename.")
 
-    def write_to_user(self, user=None):
+    def write_to_user(self, user=True):
         """Write the crontab to a user (or root) instead of a file."""
-        self.filen = None
-        self.intab = None
-        if user is not None:
-            self._user = user
-        self.write()
+        return self.write(user=user)
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
