@@ -158,14 +158,6 @@ def _unicode(text):
         return unicode(text, 'utf-8')
     return text
 
-class dynamicmethod(object):
-    """Decorator like @classmethod but will work for both obj and cls"""
-    def __init__(self, f):
-        self.f = f
-
-    def __get__(self, obj, type=None):
-        return lambda *args: self.f(obj or type, *args)
-
 
 class CronTab(object):
     """
@@ -667,13 +659,15 @@ class CronSlices(list):
         self.special = None
         if args and not self.setall(*args):
             raise ValueError("Can't set cron value to: %s" % str(args))
+        self.is_valid = self.is_self_valid
 
-    @dynamicmethod
+    def is_self_valid(self, *args):
+        """Object version of is_valid"""
+        return CronSlices.is_valid(*(args or [self]))
+
+    @classmethod
     def is_valid(cls, *args):
         """Returns true if the arguments are valid cron pattern"""
-        if type(cls) == CronSlices:
-            args = [cls]
-            cls = type(cls)
         try:
             return bool(cls(*args))
         except:
