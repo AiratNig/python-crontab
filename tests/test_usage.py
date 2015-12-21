@@ -90,11 +90,17 @@ class UseTestCase(unittest.TestCase):
         self.filenames.append(filename)
         self.assertTrue(os.path.exists(filename))
 
-    def test_07_ioerror(self):
+    def test_07_ioerror_read(self):
         """No filename ioerror"""
         with self.assertRaises(IOError):
             cron = crontab.CronTab(user='error')
             cron.read()
+
+    def test_07_ioerror_write(self):
+        """User not specified, nowhere to write to"""
+        cron = crontab.CronTab()
+        with self.assertRaises(IOError):
+            cron.write()
 
     def test_08_cronitem(self):
         """CronItem Standalone"""

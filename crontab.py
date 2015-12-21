@@ -261,8 +261,12 @@ class CronTab(object):
 
         if not self.filen:
             # Add the entire crontab back to the user crontab
-            pipeOpen(CRONCMD, path, **self.user_opt).wait()
-            os.unlink(path)
+            if self.user:
+                pipeOpen(CRONCMD, path, **self.user_opt).wait()
+                os.unlink(path)
+            else:
+                os.unlink(path)
+                raise IOError("Can not write to nowhere; please specify user or filename.")
 
     def write_to_user(self, user=None):
         """Write the crontab to a user (or root) instead of a file."""
