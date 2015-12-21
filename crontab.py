@@ -737,6 +737,8 @@ class CronSlices(list):
         return self.frequency_per_year(year=year) * self.frequency_per_day()
 
     def frequency_per_year(self, year=None):
+        """Returns the number of times this item will execute
+           in a given year (default is this year)"""
         result = 0
         if not year:
             year = date.today().year
@@ -753,8 +755,12 @@ class CronSlices(list):
         return result
 
     def frequency_per_day(self):
-        """Returns the number of time this item will execute in any day"""
+        """Returns the number of times this item will execute in any day"""
         return len(self[0]) * len(self[1])
+
+    def frequency_per_hour(self):
+        """Returns the number of times this item will execute in any hour"""
+        return len(self[0])
 
     def __str__(self):
         return self.render()
