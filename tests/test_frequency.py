@@ -149,6 +149,11 @@ class FrequencyTestCase(unittest.TestCase):
         self.assertLess( job, ["*"] )
         self.assertGreater( job, "*/3" )
 
+    def test_16_frequency_per_hour(self):
+        """Count per hour"""
+        job = self.crontab.new(command='per_hour')
+        job.setall("*/2 * * * *")
+        self.assertEqual(job.frequency_per_hour(), 30)
 
 if __name__ == '__main__':
     test_support.run_unittest(

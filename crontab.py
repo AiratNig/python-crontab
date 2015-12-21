@@ -516,6 +516,10 @@ class CronItem(object):
         """Returns the number of time this item will execute in any day"""
         return self.slices.frequency_per_day()
 
+    def frequency_per_hour(self):
+        """Returns the number of times this item will execute in any hour"""
+        return self.slices.frequency_per_hour()
+
     def schedule(self, date_from=None):
         """Return a croniter schedule is available."""
         if not date_from:
