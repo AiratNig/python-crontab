@@ -182,7 +182,7 @@ class CronTab(object):
         self.lines = None
         self.crons = None
         self.filen = None
-        self.vars = {}
+        self.env = {}
         # Protect windows users
         self.root = not WINOS and os.getuid() == 0
         # Storing user flag / username
@@ -222,7 +222,7 @@ class CronTab(object):
         """
         self.crons = []
         self.lines = []
-        self.vars = OrderedDict()
+        self.env = OrderedDict()
         lines = []
         if self.intab is not None:
             lines = self.intab.split('\n')
@@ -249,7 +249,7 @@ class CronTab(object):
                 if '=' in line:
                     (name, value) = line.split('=', 1)
                     if ' ' not in name.strip():
-                        self.vars[name.strip()] = value.strip()
+                        self.env[name.strip()] = value.strip()
                         continue
                 self.lines.append(line.replace('\n', ''))
 
@@ -293,9 +293,9 @@ class CronTab(object):
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
-        vars = ["%s=%s" % (a, _unicode(b)) for (a,b) in self.vars.items()]
+        env = ["%s=%s" % (a, _unicode(b)) for (a,b) in self.env.items()]
         crons = [unicode(cron) for cron in self.lines]
-        result = u'\n'.join(vars) + u'\n'.join(crons)
+        result = u'\n'.join(env) + u'\n'.join(crons)
         if result and result[-1] not in (u'\n', u'\r'):
             result += u'\n'
         return result

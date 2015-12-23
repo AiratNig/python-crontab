@@ -104,6 +104,12 @@ Setting all time slices at once::
     job.setall(2, 10, '2-4', '*/2', None)
     job.setall('2 10 * * *')
 
+Setting the slice to a python date object::
+
+    job.setall(time(10, 2))
+    job.setall(date(2000, 4, 2))
+    job.setall(datetime(2000, 4, 2, 10, 2))
+
 Creating a job with a comment::
 
     job = cron.new(command='/foo/bar', comment='SomeID')
@@ -158,6 +164,16 @@ Iterate through all lines::
 
     for line in cron.lines:
         print line
+
+Iterate through environment variables::
+
+    for (name, value) in cron.env.items():
+        print name
+        print value
+
+Create new or update enviroment variable::
+
+    cron.env['SHELL'] = '/bin/bash'
 
 Remove Items::
 
