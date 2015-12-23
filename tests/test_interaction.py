@@ -231,7 +231,7 @@ class InteractionTestCase(unittest.TestCase):
 
     def test_21_multiuse(self):
         """Multiple Renderings"""
-        cron = '# start of tab'
+        cron = '# start of tab\n'
         for i in range(10):
             crontab = CronTab(tab=cron)
             job = list(crontab.new(command='multi'))

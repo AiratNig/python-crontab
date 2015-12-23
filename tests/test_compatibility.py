@@ -33,7 +33,7 @@ TEST_DIR = os.path.dirname(__file__)
 
 INITAL_TAB = """
 # First Comment
-*/30 * * * * firstcommand
+0,30 * * * * firstcommand
 """
 
 class CompatTestCase(unittest.TestCase):
@@ -84,6 +84,7 @@ class CompatTestCase(unittest.TestCase):
     def test_04_comments(self):
         """Comments should be on their own lines"""
         self.assertEqual(self.crontab[0].comment, 'First Comment')
+        self.assertEqual(self.crontab.render(), INITAL_TAB)
         job = self.crontab.new('command', comment="Test comment")
         self.assertEqual(job.render(), "# Test comment\n* * * * * command")
 

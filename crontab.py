@@ -235,7 +235,7 @@ class CronTab(object):
             if cron.is_valid():
                 if not cron.comment and self.lines and \
                   self.lines[-1] and self.lines[-1][0] == '#':
-                    cron.set_comment(self.lines[-1][1:].strip())
+                    cron.set_comment(self.lines.pop()[1:].strip())
                 self.crons.append(cron)
                 self.lines.append(cron)
             else:
