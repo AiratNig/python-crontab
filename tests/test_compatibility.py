@@ -73,7 +73,6 @@ class CompatTestCase(unittest.TestCase):
         self.assertNotEqual(job.render(), '4-9 2-10/2 */3 * * addition2')
         self.assertEqual(job.render(), '4,5,6,7,8,9 2,4,6,8,10 1,11,21,31 * * addition2')
 
-
     def test_03_specials(self):
         """Ignore Special Symbols"""
         tab = crontab.CronTab(tabfile=os.path.join(TEST_DIR, 'data', 'specials.tab'))
@@ -82,7 +81,11 @@ class CompatTestCase(unittest.TestCase):
 0 0 * * 0 weekly
 """)
 
-
+    def test_04_comments(self):
+        """Comments should be on their own lines"""
+        self.assertEqual(self.crontab[0].comment, 'First Comment')
+        job = self.crontab.new('command', comment="Test comment")
+        self.assertEqual(job.render(), "# Test comment\n* * * * * command")
 
 if __name__ == '__main__':
     test_support.run_unittest(

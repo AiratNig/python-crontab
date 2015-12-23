@@ -233,6 +233,9 @@ class CronTab(object):
         for line in lines:
             cron = CronItem(line, cron=self)
             if cron.is_valid():
+                if not cron.comment and self.lines and \
+                  self.lines[-1] and self.lines[-1][0] == '#':
+                    cron.set_comment(self.lines[-1][1:].strip())
                 self.crons.append(cron)
                 self.lines.append(cron)
             else:
@@ -468,7 +471,10 @@ class CronItem(object):
         result = u"%s %s%s" % (str(self.slices), user, self.command)
         if self.comment:
             self.comment = _unicode(self.comment)
-            result += u" # " + self.comment
+            if SYSTEMV:
+                result = "# " + self.comment + "\n" + result
+            else:
+                result += u" # " + self.comment
         if not self.enabled:
             result = u"# " + result
         return result
