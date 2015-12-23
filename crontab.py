@@ -89,6 +89,7 @@ import codecs
 import tempfile
 import subprocess as sp
 
+from collections import OrderedDict
 from datetime import time, date, datetime
 
 __pkgname__ = 'python-crontab'
@@ -181,6 +182,7 @@ class CronTab(object):
         self.lines = None
         self.crons = None
         self.filen = None
+        self.vars = {}
         # Protect windows users
         self.root = not WINOS and os.getuid() == 0
         # Storing user flag / username
@@ -220,6 +222,7 @@ class CronTab(object):
         """
         self.crons = []
         self.lines = []
+        self.vars = OrderedDict()
         lines = []
         if self.intab is not None:
             lines = self.intab.split('\n')
@@ -243,6 +246,11 @@ class CronTab(object):
                 self.crons.append(cron)
                 self.lines.append(cron)
             else:
+                if '=' in line:
+                    (name, value) = line.split('=', 1)
+                    if ' ' not in name.strip():
+                        self.vars[name.strip()] = value.strip()
+                        continue
                 self.lines.append(line.replace('\n', ''))
 
     def write(self, filename=None, user=None):
@@ -285,10 +293,9 @@ class CronTab(object):
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
-        crons = []
-        for cron in self.lines:
-            crons.append(unicode(cron))
-        result = u'\n'.join(crons)
+        vars = ["%s=%s" % (a, _unicode(b)) for (a,b) in self.vars.items()]
+        crons = [unicode(cron) for cron in self.lines]
+        result = u'\n'.join(vars) + u'\n'.join(crons)
         if result and result[-1] not in (u'\n', u'\r'):
             result += u'\n'
         return result

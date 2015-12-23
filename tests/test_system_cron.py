@@ -32,6 +32,9 @@ except ImportError:
     from test import support as test_support
 
 INITAL_TAB = """
+VAR=foo
+JAR=bar
+
 */30 * * * * palin one_cross_each
 """
 
@@ -54,7 +57,9 @@ class SystemCronTestCase(unittest.TestCase):
         job = self.crontab.new(command='release_brian', user='pontus')
         self.assertEqual(job.user, 'pontus')
         self.assertEqual(job.command, 'release_brian')
-        self.assertEqual(str(self.crontab), """
+        self.assertEqual(str(self.crontab), """VAR=foo
+JAR=bar
+
 */30 * * * * palin one_cross_each
 
 * * * * * pontus release_brian
@@ -72,7 +77,9 @@ class SystemCronTestCase(unittest.TestCase):
     def test_04_remove(self):
         """Remove the user flag"""
         self.crontab._user = None
-        self.assertEqual(str(self.crontab), """
+        self.assertEqual(str(self.crontab), """VAR=foo
+JAR=bar
+
 */30 * * * * one_cross_each
 """)
         self.crontab.new(command='now_go_away')
@@ -90,6 +97,14 @@ class SystemCronTestCase(unittest.TestCase):
         self.assertEqual(str(crontab), "* * * * * user command\n")
         crontab = CronTab(user=False, tab="* * * * * user command\n")
         self.assertEqual(str(crontab), "* * * * * user command\n")
+
+    def test_07_variables(self):
+        """Vixie cron variables support"""
+        self.assertEqual(self.crontab.vars, {'VAR': 'foo', 'JAR': 'bar'})
+        self.crontab.vars['SHELL'] = 'bash'
+        self.assertEqual(str(self.crontab), """VAR=foo\nJAR=bar\nSHELL=bash\n
+*/30 * * * * palin one_cross_each
+""")
 
 if __name__ == '__main__':
     test_support.run_unittest(
