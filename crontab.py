@@ -342,15 +342,20 @@ class CronTab(object):
                 yield cron.comment
                 returned.append(cron.comment)
 
-    def remove_all(self, command=None, comment=None, time=None):
+    def remove_all(self, **kwargs):
         """Removes all crons using the stated command OR that have the
-        stated comment OR removes everything if no arguments specified."""
-        if command:
-            return self.remove(*self.find_command(command))
-        elif comment:
-            return self.remove(*self.find_comment(comment))
-        elif time:
-            return self.remove(*self.find_time(time))
+        stated comment OR removes everything if no arguments specified.
+
+           command - Remove all with this command
+           comment - Remove all with this comment or ID
+           time    - Remove all with this time code
+        """
+        if 'command' in kwargs:
+            return self.remove(*self.find_command(kwargs['command']))
+        elif 'comment' in kwargs:
+            return self.remove(*self.find_comment(kwargs['comment']))
+        elif 'time' in kwargs:
+            return self.remove(*self.find_time(kwargs['time']))
         return self.remove(*self.crons[:])
 
     def remove(self, *items):

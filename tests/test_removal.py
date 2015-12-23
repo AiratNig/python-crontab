@@ -60,10 +60,10 @@ class RemovalTestCase(unittest.TestCase):
 
     def test_03_remove_cmd(self):
         """Remove all with Command"""
-        self.crontab.remove_all('command2')
+        self.crontab.remove_all(command='command2')
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 67)
-        self.crontab.remove_all('command3')
+        self.crontab.remove_all(command='command3')
         self.assertEqual(len(self.crontab), 1)
         self.assertEqual(len(self.crontab.render()), 33)
 
@@ -76,6 +76,13 @@ class RemovalTestCase(unittest.TestCase):
     def test_05_remove_date(self):
         """Remove all with Time Code"""
         self.crontab.remove_all(time='2 * * * *')
+        self.assertEqual(len(self.crontab), 2)
+        self.assertEqual(len(self.crontab.render()), 67)
+
+    def test_06_removal_of_none(self):
+        """Remove all respects None as a possible value"""
+        self.crontab[1].set_comment(None)
+        self.crontab.remove_all(comment=None)
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 67)
 
