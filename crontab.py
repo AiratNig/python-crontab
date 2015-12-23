@@ -129,8 +129,11 @@ PY3 = platform.python_version()[0] == '3'
 WINOS = platform.system() == 'Windows'
 SYSTEMV = not WINOS and os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
 
+current_user = lambda: None
 if not WINOS:
     import pwd
+    def current_user():
+        return pwd.getpwuid(os.getuid())[0]
 
 CRONCMD = "/usr/bin/crontab"
 
@@ -197,8 +200,8 @@ class CronTab(object):
 
     @property
     def user(self):
-        if self._user is True and pwd:
-            return pwd.getpwuid(os.getuid())[0]
+        if self._user is True:
+            return current_user()
         return self._user
 
     @property
@@ -206,7 +209,8 @@ class CronTab(object):
         # Fedora and Mac require the current user to not specify
         # But Ubuntu/Debian doesn't care. Be careful here.
         if self._user and self._user is not True:
-            return {'u': self._user}
+            if self._user != current_user():
+                return {'u': self._user}
         return {}
 
     def read(self, filename=None):

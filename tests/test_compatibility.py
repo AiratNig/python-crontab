@@ -36,6 +36,13 @@ INITAL_TAB = """
 0,30 * * * * firstcommand
 """
 
+class UserTestCase(unittest.TestCase):
+    def test_01_self_user(self):
+        tab = crontab.CronTab(user='foo')
+        self.assertEqual(tab.user_opt, {'u': 'foo'})
+        tab = crontab.CronTab(user=crontab.current_user())
+        self.assertEqual(tab.user_opt, {})
+
 class CompatTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     @classmethod
