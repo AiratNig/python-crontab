@@ -25,6 +25,9 @@ import sys
 
 import unittest
 import crontab
+
+from datetime import date, time, datetime, timedelta
+
 try:
     from test import test_support
 except ImportError:
@@ -111,7 +114,28 @@ class UseTestCase(unittest.TestCase):
         item.command = str('nothing')
         self.assertEqual(item.render(), '* * * * * nothing')
 
-    def test_09_slice_validation(self):
+    def test_10_time_object(self):
+        """Set slices using time object"""
+        item = crontab.CronItem()
+        self.assertEqual(str(item.slices), '* * * * *')
+        item.setall(time(1, 2))
+        self.assertEqual(str(item.slices), '2 1 * * *')
+
+    def test_11_date_object(self):
+        """Set slices using date object"""
+        item = crontab.CronItem()
+        self.assertEqual(str(item.slices), '* * * * *')
+        item.setall(date(2010, 6, 7))
+        self.assertEqual(str(item.slices), '0 0 7 6 *')
+
+    def test_12_datetime_object(self):
+        """Set slices using datetime object"""
+        item = crontab.CronItem()
+        self.assertEqual(str(item.slices), '* * * * *')
+        item.setall(datetime(2009, 8, 9, 3, 4))
+        self.assertEqual(str(item.slices), '4 3 9 8 *')
+
+    def test_20_slice_validation(self):
         """CronSlices class and objects can validate"""
         CronSlices = crontab.CronSlices
         self.assertTrue(CronSlices('* * * * *').is_valid())

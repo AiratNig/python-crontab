@@ -89,7 +89,7 @@ import codecs
 import tempfile
 import subprocess as sp
 
-from datetime import date, datetime
+from datetime import time, date, datetime
 
 __pkgname__ = 'python-crontab'
 __version__ = '1.9.5'
@@ -655,7 +655,6 @@ class ItemEveryInterface(object):
             raise ValueError("Invalid value '%s', outside 1 year" % self.unit)
         self.slices.setall('@yearly')
 
-
 class CronSlices(list):
     """Controls a list of five time 'slices' which reprisent:
         minute frequency, hour frequency, day of month frequency,
@@ -686,6 +685,14 @@ class CronSlices(list):
         self.clear()
         if isinstance(to, CronItem):
             slices = to.slices
+        elif isinstance(to, datetime):
+            slices = [to.minute, to.hour, to.day, to.month, '*']
+        elif isinstance(to, time):
+            slices = [to.minute, to.hour, '*', '*', '*']
+        elif isinstance(to, date):
+            slices = [0, 0, to.day, to.month, '*']
+          # It might be possible to later understand timedelta objects
+          # but there's no convincing mathematics to do the conversion yet.
         elif isinstance(to, list):
             slices = to
         elif slices:
