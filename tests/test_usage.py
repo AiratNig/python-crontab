@@ -93,7 +93,7 @@ class UseTestCase(unittest.TestCase):
         cron = crontab.CronTab(tab=USER)
         self.assertEqual(repr(cron), "<Unattached CronTab>")
         cron.write_to_user('bob')
-        filename = os.path.join(TEST_DIR, 'data', 'bob.tab')
+        filename = os.path.join(TEST_DIR, 'data', 'spool', 'bob')
         self.filenames.append(filename)
         self.assertTrue(os.path.exists(filename))
         self.assertEqual(repr(cron), "<User CronTab 'bob'>")

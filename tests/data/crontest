@@ -13,16 +13,16 @@ if '-u' in args:
 if '-l' in args:
     if user == 'error':
         raise ValueError("Delibrate IO Error")
-    if not os.path.exists(os.path.join(loc, '%s.tab' % user)):
+    if not os.path.exists(os.path.join(loc, 'spool', user)):
         sys.stderr.write("no crontab for %s\n" % user)
         sys.exit(1)
-    fhl = open(os.path.join(loc, '%s.tab' % user), 'r')
+    fhl = open(os.path.join(loc, 'spool', user), 'r')
     print(fhl.read())
 else:
     for filename in args:
         if filename[0] == '-' or filename == user:
             continue
-        new_name = os.path.join(loc, '%s.tab' % user)
+        new_name = os.path.join(loc, 'spool', user)
         if not os.path.exists(filename):
             raise KeyError("Can't find file: %s" % filename)
         if os.path.exists(new_name):
