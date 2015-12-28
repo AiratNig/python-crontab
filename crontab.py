@@ -383,6 +383,16 @@ class CronTab(object):
         self.lines.remove(item)
         return 1
 
+    def __repr__(self):
+        kind = 'System ' if self._user == False else ''
+        if self.filen:
+            return "<%sCronTab '%s'>" % (kind, self.filen)
+        elif self.user and not self.user_opt:
+            return "<My CronTab>"
+        elif self.user:
+            return "<User CronTab '%s'>" % self.user
+        return "<Unattached %sCronTab>" % kind
+
     def __iter__(self):
         return self.crons.__iter__()
 

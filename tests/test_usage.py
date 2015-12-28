@@ -56,11 +56,13 @@ class UseTestCase(unittest.TestCase):
         cron = crontab.CronTab()
         self.assertEqual(cron.render(), "")
         self.assertEqual(cron.__unicode__(), "")
+        self.assertEqual(repr(cron), "<Unattached CronTab>")
 
     def test_02_user(self):
         """Open a user's crontab"""
         cron = crontab.CronTab(user='basic')
         self.assertEqual(cron.render(), BASIC)
+        self.assertEqual(repr(cron), "<User CronTab 'basic'>")
 
     def test_03_usage(self):
         """Dont modify crontab"""
@@ -79,6 +81,7 @@ class UseTestCase(unittest.TestCase):
         cron = crontab.CronTab(user=True)
         self.assertNotEqual(cron.user, True)
         self.assertEqual(cron.render(), USER)
+        self.assertEqual(repr(cron), "<My CronTab>")
 
     def test_05_nouser(self):
         """Username doesn't exist"""
@@ -88,10 +91,12 @@ class UseTestCase(unittest.TestCase):
     def test_06_touser(self):
         """Write to use API"""
         cron = crontab.CronTab(tab=USER)
+        self.assertEqual(repr(cron), "<Unattached CronTab>")
         cron.write_to_user('bob')
         filename = os.path.join(TEST_DIR, 'data', 'bob.tab')
         self.filenames.append(filename)
         self.assertTrue(os.path.exists(filename))
+        self.assertEqual(repr(cron), "<User CronTab 'bob'>")
 
     def test_07_ioerror_read(self):
         """No filename ioerror"""

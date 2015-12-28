@@ -31,6 +31,7 @@ try:
 except ImportError:
     from test import support as test_support
 
+TEST_FILE = os.path.join(os.path.dirname(__file__), 'data', 'crontab')
 INITAL_TAB = """
 VAR=foo
 JAR=bar
@@ -42,6 +43,10 @@ class SystemCronTestCase(unittest.TestCase):
     """Test vixie cron user addition."""
     def setUp(self):
         self.crontab = CronTab(tab=INITAL_TAB, user=False)
+
+    def test_00_repr(self):
+        """System crontab repr"""
+        self.assertEqual(repr(self.crontab), "<Unattached System CronTab>")
 
     def test_01_read(self):
         """Read existing command"""
@@ -105,6 +110,11 @@ JAR=bar
         self.assertEqual(str(self.crontab), """VAR=foo\nJAR=bar\nSHELL=bash\n
 */30 * * * * palin one_cross_each
 """)
+
+    def test_08_system_file(self):
+        """Load system crontab from a file"""
+        crontab = CronTab(user=False, tabfile=TEST_FILE)
+        self.assertEqual(repr(crontab), "<System CronTab '%s'>" % TEST_FILE)
 
 if __name__ == '__main__':
     test_support.run_unittest(
