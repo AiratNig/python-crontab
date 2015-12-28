@@ -100,8 +100,8 @@ JAR=bar
 
     def test_07_variables(self):
         """Vixie cron variables support"""
-        self.assertEqual(self.crontab.vars, {'VAR': 'foo', 'JAR': 'bar'})
-        self.crontab.vars['SHELL'] = 'bash'
+        self.assertEqual(self.crontab.env, {'VAR': 'foo', 'JAR': 'bar'})
+        self.crontab.env['SHELL'] = 'bash'
         self.assertEqual(str(self.crontab), """VAR=foo\nJAR=bar\nSHELL=bash\n
 */30 * * * * palin one_cross_each
 """)
