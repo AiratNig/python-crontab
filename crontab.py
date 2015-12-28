@@ -238,20 +238,22 @@ class CronTab(object):
                 raise IOError("Read crontab %s: %s" % (self.user, err))
             lines = out.decode('utf-8').split("\n")
         for line in lines:
-            cron = CronItem(line, cron=self)
-            if cron.is_valid():
-                if not cron.comment and self.lines and \
-                  self.lines[-1] and self.lines[-1][0] == '#':
-                    cron.set_comment(self.lines.pop()[1:].strip())
-                self.crons.append(cron)
-                self.lines.append(cron)
-            else:
-                if '=' in line:
-                    (name, value) = line.split('=', 1)
-                    if ' ' not in name.strip():
-                        self.env[name.strip()] = value.strip()
-                        continue
-                self.lines.append(line.replace('\n', ''))
+            self.append(CronItem(line, cron=self), line)
+
+    def append(self, cron, line=''):
+        """Append a CronItem object to this CronTab"""
+        if cron.is_valid():
+            if not cron.comment and self.lines and \
+              self.lines[-1] and self.lines[-1][0] == '#':
+                cron.set_comment(self.lines.pop()[1:].strip())
+            self.crons.append(cron)
+            self.lines.append(cron)
+            return
+        if '=' in line and (' ' not in line or line.index('=') < line.index(' ')):
+            (name, value) = line.split('=', 1)
+            self.env[name.strip()] = value.strip()
+            return
+        self.lines.append(line.replace('\n', ''))
 
     def write(self, filename=None, user=None):
         """Write the crontab to it's source or a given filename."""
