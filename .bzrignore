@@ -1,8 +1,0 @@
-MANIFEST
-dist
-build
-__pycache__
-debian
-output-*
-.coverage
-*.egg-info
