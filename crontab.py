@@ -245,22 +245,22 @@ class CronTab(object):
                 raise IOError("Read crontab %s: %s" % (self.user, err))
             lines = out.decode('utf-8').split("\n")
         for line in lines:
-            self.append(CronItem(line, cron=self), line)
+            self.append(CronItem(line, cron=self), line, read=True)
 
-    def append(self, cron, line=''):
+    def append(self, cron, line='', read=False):
         """Append a CronItem object to this CronTab"""
         if cron.is_valid():
-            if not cron.comment and self.lines and \
+            if read and not cron.comment and self.lines and \
               self.lines[-1] and self.lines[-1][0] == '#':
                 cron.set_comment(self.lines.pop()[1:].strip())
             self.crons.append(cron)
             self.lines.append(cron)
-            return
+            return cron
         if '=' in line:
             if ' ' not in line or line.index('=') < line.index(' '):
                 (name, value) = line.split('=', 1)
                 self.env[name.strip()] = value.strip()
-                return
+                return None
         self.lines.append(line.replace('\n', ''))
 
     def write(self, filename=None, user=None):
@@ -319,10 +319,7 @@ class CronTab(object):
         """
         if not user and self.user is False:
             raise ValueError("User is required for system crontabs.")
-        item = CronItem(command=command, comment=comment, user=user, cron=self)
-        self.crons.append(item)
-        self.lines.append(item)
-        return item
+        return self.append(CronItem(None, command, comment, user, self))
 
     def find_command(self, command):
         """Return an iter of jobs matching any part of the command."""
