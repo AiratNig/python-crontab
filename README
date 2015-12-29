@@ -271,6 +271,24 @@ the last execution was::
     for d in cron.find_command('echo')[0].log:
         print d['pid'] + " - " + d['date']
 
+All System CronTabs Functionality
+=================================
+
+The crontabs (note the plural) module can attempt to find all crontabs on the
+system. This works well for Linux systems with known locations for cron files
+and user spolls. It will even extract anacron jobs so you can get a picture
+of all the jobs running on your system::
+
+    from crontabs import CronTabs
+    
+    for cron in CronTabs():
+        print repr(cron)
+
+All jobs can be brought together to run various searches, all jobs are added
+to a CronTab object which can be used as documented above::
+
+   jobs = CronTabs().all.find_command('foo')
+
 Schedule Functionality
 ======================
 
