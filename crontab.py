@@ -117,11 +117,11 @@ SPECIALS = {"reboot":   '@reboot',
 SPECIAL_IGNORE = ['midnight', 'annually']
 
 S_INFO = [
-    {'name': 'Minutes',      'max': 59, 'min': 0},
-    {'name': 'Hours',        'max': 23, 'min': 0},
-    {'name': 'Day of Month', 'max': 31, 'min': 1},
-    {'name': 'Month',        'max': 12, 'min': 1, 'enum': MONTH_ENUM},
-    {'name': 'Day of Week',  'max': 6,  'min': 0, 'enum': WEEK_ENUM},
+    {'max': 59, 'min': 0, 'name': 'Minutes'},
+    {'max': 23, 'min': 0, 'name': 'Hours'},
+    {'max': 31, 'min': 1, 'name': 'Day of Month'},
+    {'max': 12, 'min': 1, 'name': 'Month', 'enum': MONTH_ENUM},
+    {'max': 6, 'min': 0, 'name': 'Day of Week', 'enum': WEEK_ENUM},
 ]
 
 # Detect Python3 and which OS for temperments.
@@ -134,6 +134,7 @@ current_user = lambda: None
 if not WINOS:
     import pwd
     def current_user():
+        """Returns the username of the current user"""
         return pwd.getpwuid(os.getuid())[0]
 
 CRONCMD = "/usr/bin/crontab"
@@ -144,17 +145,20 @@ if PY3:
     basestring = str
 
 
-def pipeOpen(cmd, *args, **flags):
+def open_pipe(cmd, *args, **flags):
     """Runs a program and orders the arguments for compatability.
 
     a. keyword args are flags and always appear /before/ arguments for bsd
     """
-    l = tuple(cmd.split(' '))
-    for (k,v) in flags.items():
-        if v is not None:
-            l += len(k)==1 and ("-%s" % (k,), str(v)) or ("--%s=%s" % (k,v),)
-    l += tuple(args)
-    return sp.Popen(tuple(a for a in l if a), stdout=sp.PIPE, stderr=sp.PIPE)
+    cmd_args = tuple(cmd.split(' '))
+    for (key, value) in flags.items():
+        if value is not None:
+            if len(key) == 1:
+                cmd_args += ("-%s" % (key,), str(value))
+            else:
+                cmd_args += ("--%s=%s" % (key, value),)
+    args = tuple(arg for arg in (cmd_args + tuple(args)) if arg)
+    return sp.Popen(args, stdout=sp.PIPE, stderr=sp.PIPE)
 
 def _unicode(text):
     """Convert to the best string format for this python version"""
@@ -202,12 +206,14 @@ class CronTab(object):
 
     @property
     def user(self):
+        """Return user's username of this crontab if applicable"""
         if self._user is True:
             return current_user()
         return self._user
 
     @property
     def user_opt(self):
+        """Returns the user option for the crontab commandline"""
         # Fedora and Mac require the current user to not specify
         # But Ubuntu/Debian doesn't care. Be careful here.
         if self._user and self._user is not True:
@@ -231,7 +237,7 @@ class CronTab(object):
             with codecs.open(filename, 'r', encoding='utf-8') as fhl:
                 lines = fhl.readlines()
         elif self.user:
-            (out, err) = pipeOpen(CRONCMD, l='', **self.user_opt).communicate()
+            (out, err) = open_pipe(CRONCMD, l='', **self.user_opt).communicate()
             if err and 'no crontab for' in str(err):
                 pass
             elif err:
@@ -249,10 +255,11 @@ class CronTab(object):
             self.crons.append(cron)
             self.lines.append(cron)
             return
-        if '=' in line and (' ' not in line or line.index('=') < line.index(' ')):
-            (name, value) = line.split('=', 1)
-            self.env[name.strip()] = value.strip()
-            return
+        if '=' in line:
+            if ' ' not in line or line.index('=') < line.index(' '):
+                (name, value) = line.split('=', 1)
+                self.env[name.strip()] = value.strip()
+                return
         self.lines.append(line.replace('\n', ''))
 
     def write(self, filename=None, user=None):
@@ -283,11 +290,11 @@ class CronTab(object):
         if not self.filen:
             # Add the entire crontab back to the user crontab
             if self.user:
-                pipeOpen(CRONCMD, path, **self.user_opt).wait()
+                open_pipe(CRONCMD, path, **self.user_opt).wait()
                 os.unlink(path)
             else:
                 os.unlink(path)
-                raise IOError("Can not write to nowhere; please specify user or filename.")
+                raise IOError("Please specify user or filename to write.")
 
     def write_to_user(self, user=True):
         """Write the crontab to a user (or root) instead of a file."""
@@ -295,7 +302,8 @@ class CronTab(object):
 
     def render(self):
         """Render this crontab as it would be in the crontab."""
-        env = ["%s=%s" % (a, _unicode(b)) for (a,b) in self.env.items()]
+        envs = self.env.items()
+        env = ["%s=%s" % (key, _unicode(val)) for (key, val) in envs]
         crons = [unicode(cron) for cron in self.lines]
         result = u'\n'.join(env) + u'\n'.join(crons)
         if result and result[-1] not in (u'\n', u'\r'):
@@ -415,9 +423,9 @@ class CronItem(object):
     May be considered to be a cron job object.
     """
     def __init__(self, line=None, command='', comment='', user=None, cron=None):
-        self.cron    = cron
-        self.user    = user
-        self.valid   = False
+        self.cron = cron
+        self.user = user
+        self.valid = False
         self.enabled = True
         self.special = False
         self.comment = None
@@ -439,7 +447,7 @@ class CronItem(object):
     def delete(self):
         """Delete this item and remove it from it's parent"""
         if not self.cron:
-            raise UnboundLocalError("Cron item is not associated with a crontab!")
+            raise UnboundLocalError("Cron item is not in a crontab!")
         else:
             self.cron.remove(self)
 
@@ -461,6 +469,7 @@ class CronItem(object):
         self._set_parse(SPECREX.findall(line))
 
     def _set_parse(self, result):
+        """Set all the parsed variables into the item"""
         if not result:
             return
         if self.cron.user == False:
@@ -523,7 +532,7 @@ class CronItem(object):
         Many of these patterns exist as special tokens on Linux, such as
         `@midnight` and `@hourly`
         """
-        return ItemEveryInterface(self.slices, unit)
+        return Every(self.slices, unit)
 
     def setall(self, *args):
         """Replace existing time pattern with these five values given as args:
@@ -566,7 +575,7 @@ class CronItem(object):
             # Croniter is an optional import
             from croniter.croniter import croniter
         except ImportError:
-            raise ImportError("Croniter is not available. Please install croniter"
+            raise ImportError("Croniter not available. Please install croniter"
                           " python module via pip or your package manager")
 
         class Croniter(croniter):
@@ -611,6 +620,7 @@ class CronItem(object):
 
     @property
     def day(self):
+        """Return the day slice"""
         return self.dom
 
     @property
@@ -639,8 +649,8 @@ class CronItem(object):
     def __len__(self):
         return len(str(self))
 
-    def __getitem__(self, x):
-        return self.slices[x]
+    def __getitem__(self, key):
+        return self.slices[key]
 
     def __lt__(self, value):
         return self.frequency() < CronSlices(value).frequency()
@@ -653,11 +663,12 @@ class CronItem(object):
 
     def __unicode__(self):
         if not self.is_valid():
-            raise ValueError('Refusing to render invalid crontab. Disable to continue.')
+            raise ValueError('Refusing to render invalid crontab.'
+                             ' Disable to continue.')
         return self.render()
 
 
-class ItemEveryInterface(object):
+class Every(object):
     """Provide an interface to the job.every() method:
         Available Calls:
           minute, minutes, hour, hours, dom, doms, month, months, dow, dows
@@ -668,18 +679,19 @@ class ItemEveryInterface(object):
     def __init__(self, item, units):
         self.slices = item
         self.unit = units
-        for (x, i) in enumerate(['minute', 'hour', 'dom', 'month', 'dow',
+        for (key, name) in enumerate(['minute', 'hour', 'dom', 'month', 'dow',
                                  'min', 'hour', 'day', 'moon', 'weekday']):
-            setattr(self, i, self._set(x % 5))
-            setattr(self, i+'s', self._set(x % 5))
+            setattr(self, name, self.set_attr(key % 5))
+            setattr(self, name+'s', self.set_attr(key % 5))
 
-    def _set(self, target):
+    def set_attr(self, target):
+        """Inner set target, returns function"""
         def innercall():
             """Returned inner call for setting slice targets"""
             self.slices.clear()
             # Day-of-week is actually a level 2 set, not level 4.
-            for p in range(target == 4 and 2 or target):
-                self.slices[p].on('<')
+            for key in range(target == 4 and 2 or target):
+                self.slices[key].on('<')
             self.slices[target].every(self.unit)
         return innercall
 
@@ -695,6 +707,7 @@ class CronSlices(list):
         month requency and finally day of the week frequency.
      """
     def __init__(self, *args):
+        super(CronSlices, self).__init__()
         for info in S_INFO:
             self.append(CronSlice(info))
         self.special = None
@@ -704,56 +717,57 @@ class CronSlices(list):
 
     def is_self_valid(self, *args):
         """Object version of is_valid"""
-        return CronSlices.is_valid(*(args or [self]))
+        args = args or (self,)
+        return CronSlices.is_valid(*args)
 
     @classmethod
     def is_valid(cls, *args):
         """Returns true if the arguments are valid cron pattern"""
         try:
             return bool(cls(*args))
-        except:
+        except Exception:
             return False
 
-    def setall(self, to, *slices):
+    def setall(self, value, *slices):
         """Parses the various ways date/time frequency can be specified"""
         self.clear()
-        if isinstance(to, CronItem):
-            slices = to.slices
-        elif isinstance(to, datetime):
-            slices = [to.minute, to.hour, to.day, to.month, '*']
-        elif isinstance(to, time):
-            slices = [to.minute, to.hour, '*', '*', '*']
-        elif isinstance(to, date):
-            slices = [0, 0, to.day, to.month, '*']
+        if isinstance(value, CronItem):
+            slices = value.slices
+        elif isinstance(value, datetime):
+            slices = [value.minute, value.hour, value.day, value.month, '*']
+        elif isinstance(value, time):
+            slices = [value.minute, value.hour, '*', '*', '*']
+        elif isinstance(value, date):
+            slices = [0, 0, value.day, value.month, '*']
           # It might be possible to later understand timedelta objects
           # but there's no convincing mathematics to do the conversion yet.
-        elif isinstance(to, list):
-            slices = to
+        elif isinstance(value, list):
+            slices = value
         elif slices:
-            slices = (to,) + slices
-        elif isinstance(to, basestring) and to:
-            if to.count(' ') == 4:
-                slices = to.strip().split(' ')
-            elif to.strip()[0] == '@':
-                to = to[1:]
+            slices = (value,) + slices
+        elif isinstance(value, basestring) and value:
+            if value.count(' ') == 4:
+                slices = value.strip().split(' ')
+            elif value.strip()[0] == '@':
+                value = value[1:]
                 slices = None
             else:
-                slices = [to]
+                slices = [value]
 
-            if 'reboot' in (to, to[1:]):
+            if 'reboot' in (value, value[1:]):
                 self.special = '@reboot'
                 return True
-            elif to in SPECIALS.keys():
-                return self.setall(SPECIALS[to])
+            elif value in SPECIALS.keys():
+                return self.setall(SPECIALS[value])
             elif not slices:
                 return False
 
         if id(slices) == id(self):
             raise AssertionError("Can not set cron to itself!")
 
-        for a, b in zip(self, slices):
+        for set_a, set_b in zip(self, slices):
             try:
-                a.parse(b)
+                set_a.parse(set_b)
             except ValueError as error:
                 sys.stderr.write("WARNING: %s\n" % str(error))
                 return False
@@ -767,22 +781,23 @@ class CronSlices(list):
 
     def render(self):
         "Return just the first part of a cron job (the numbers or special)"
-        time = self.clean_render()
+        slices = self.clean_render()
         if self.special:
             return self.special
         elif not SYSTEMV:
             for (name, value) in SPECIALS.items():
-                if value == time and name not in SPECIAL_IGNORE:
+                if value == slices and name not in SPECIAL_IGNORE:
                     return "@%s" % name
-        return time
+        return slices
 
     def clear(self):
         """Clear the special and set values"""
         self.special = None
-        for s in self:
-            s.clear()
+        for item in self:
+            item.clear()
 
     def frequency(self, year=None):
+        """Return frequence per year times frequency per day"""
         return self.frequency_per_year(year=year) * self.frequency_per_day()
 
     def frequency_per_year(self, year=None):
@@ -819,8 +834,25 @@ class CronSlices(list):
 
 
 class SundayError(KeyError):
+    """Sunday was specified as 7 instead of 0"""
     pass
 
+class Also(object):
+    """Link range values together (appending instead of replacing)"""
+    def __init__(self, obj):
+        self.obj = obj
+
+    def every(self, *a):
+        """Also every one of these"""
+        return self.obj.every(*a, also=True)
+
+    def on(self, *a):
+        """Also on these"""
+        return self.obj.on(*a, also=True)
+
+    def during(self, *a):
+        """Also during these"""
+        return self.obj.during(*a, also=True)
 
 class CronSlice(object):
     """Cron slice object which shows a time pattern"""
@@ -843,7 +875,7 @@ class CronSlice(object):
                 self.parts.append(self.get_range(part))
             else:
                 try:
-                    self.parts.append(self._v(part))
+                    self.parts.append(self.parse_value(part))
                 except SundayError:
                     self.parts.append(0)
                 except ValueError as err:
@@ -882,9 +914,9 @@ class CronSlice(object):
         """Set the time values to the specified placements."""
         if not opts.get('also', False):
             self.clear()
-        for av in n_value:
+        for set_a in n_value:
             try:
-                self.parts += self._v(av),
+                self.parts += self.parse_value(set_a),
             except SundayError:
                 self.parts += 0,
         return self.parts
@@ -893,28 +925,13 @@ class CronSlice(object):
         """Set the During value, which sets a range"""
         if not also:
             self.clear()
-        self.parts.append(self.get_range(self._v(vfrom), self._v(vto)))
+        self.parts.append(self.get_range(self.parse_value(vfrom), self.parse_value(vto)))
         return self.parts[-1]
 
     @property
     def also(self):
         """Appends rather than replaces the new values"""
-        outself = self
-
-        class Also(object):
-            """Will append new values"""
-            def every(self, *a):
-                """Also every one of these"""
-                return outself.every(*a, also=True)
-
-            def on(self, *a):
-                """Also on these"""
-                return outself.on(*a, also=True)
-
-            def during(self, *a):
-                """Also during these"""
-                return outself.during(*a, also=True)
-        return Also()
+        return Also(self)
 
     def clear(self):
         """clear the slice ready for new vaues"""
@@ -926,46 +943,47 @@ class CronSlice(object):
 
     def __iter__(self):
         """Return the entire element as an iterable"""
-        r = {}
+        ret = {}
         # An empty part means '*' which is every(1)
         if not self.parts:
             self.every(1)
         for part in self.parts:
             if isinstance(part, CronRange):
                 for bit in part.range():
-                    r[bit] = 1
+                    ret[bit] = 1
             else:
-                r[int(part)] = 1
-        for x in r:
-            yield x
+                ret[int(part)] = 1
+        for val in ret:
+            yield val
 
     def __len__(self):
         """Returns the number of times this slice happens in it's range"""
         return len(list(self.__iter__()))
 
-    def _v(self, v):
-        if v == '>':
-            v = self.max
-        elif v == '<':
-            v = self.min
+    def parse_value(self, val):
+        """Parse the value of the cron slice and raise any errors needed"""
+        if val == '>':
+            val = self.max
+        elif val == '<':
+            val = self.min
         try:
-            out = get_cronvalue(v, self.enum)
+            out = get_cronvalue(val, self.enum)
         except ValueError:
-            raise ValueError("Unrecognised '%s'='%s'" % (self.name, v))
+            raise ValueError("Unrecognised '%s'='%s'" % (self.name, val))
         except KeyError:
-            raise KeyError("No enumeration '%s' got '%s'" % (self.name, v))
+            raise KeyError("No enumeration '%s' got '%s'" % (self.name, val))
 
         if self.max == 6 and int(out) == 7:
             raise SundayError("Detected Sunday as 7 instead of 0!")
 
         if int(out) < self.min or int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
-                str(v), self.min, self.max, self.name))
+                str(val), self.min, self.max, self.name))
         return out
 
-    def filter_v(self, v):
+    def filter_value(self, val):
         """Support wrapper for enumerations and check for range"""
-        return self._v(v)
+        return self.parse_value(val)
 
 
 def get_cronvalue(value, enums):
@@ -984,6 +1002,14 @@ class CronValue(object):
     def __init__(self, value, enums):
         self.enum = value
         self.value = enums.index(value.lower())
+
+    def get_enum(self):
+        """Return the enumeration value"""
+        return self.enum
+
+    def get_value(self):
+        """Return the actual numerical value"""
+        return self.value
 
     def __lt__(self, value):
         return self.value < int(value)
@@ -1036,14 +1062,14 @@ class CronRange(object):
         """Parse a ranged value in a cronjob"""
         if value.count('/') == 1:
             value, seq = value.split('/')
-            self.seq = self.slice.filter_v(seq)
+            self.seq = self.slice.filter_value(seq)
             if self.seq < 1 or self.seq > self.slice.max - 1:
                 raise ValueError("Sequence can not be divided by zero or max")
         if value.count('-') == 1:
             vfrom, vto = value.split('-')
-            self.vfrom = self.slice.filter_v(vfrom)
+            self.vfrom = self.slice.filter_value(vfrom)
             try:
-                self.vto = self.slice.filter_v(vto)
+                self.vto = self.slice.filter_value(vto)
             except SundayError:
                 self.vto = 6
         elif value == '*':
@@ -1064,7 +1090,7 @@ class CronRange(object):
         if self.seq != 1:
             value += "/%d" % self.seq
         if value != '*' and SYSTEMV:
-            value = ','.join(map(str, self.range()))
+            value = ','.join([str(val) for val in self.range()])
         return value
 
     def range(self):

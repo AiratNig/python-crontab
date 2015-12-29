@@ -206,9 +206,9 @@ class InteractionTestCase(unittest.TestCase):
         dow = CronSlice({'name': 'M', 'max': 7, 'min': 0, 'enum': ['a']}, '*/6')
         self.assertEqual(repr(dow), '<CronSlice \'*/6\'>')
 
-        self.assertEqual(repr(dow._v('a')), 'a')
+        self.assertEqual(repr(dow.parse_value('a')), 'a')
         with self.assertRaises(ValueError):
-            dow._v('b')
+            dow.parse_value('b')
 
         self.assertEqual(dow.get_range().render(), '*')
         with self.assertRaises(ValueError):
