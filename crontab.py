@@ -152,11 +152,12 @@ def open_pipe(cmd, *args, **flags):
     """
     cmd_args = tuple(cmd.split(' '))
     for (key, value) in flags.items():
-        if value is not None:
-            if len(key) == 1:
-                cmd_args += ("-%s" % (key,), str(value))
-            else:
-                cmd_args += ("--%s=%s" % (key, value),)
+        if len(key) == 1:
+            cmd_args += ("-%s" % key),
+            if value is not None:
+                cmd_args += str(value),
+        else:
+            cmd_args += ("--%s=%s" % (key, value)),
     args = tuple(arg for arg in (cmd_args + tuple(args)) if arg)
     return sp.Popen(args, stdout=sp.PIPE, stderr=sp.PIPE)
 
@@ -1002,14 +1003,6 @@ class CronValue(object):
     def __init__(self, value, enums):
         self.enum = value
         self.value = enums.index(value.lower())
-
-    def get_enum(self):
-        """Return the enumeration value"""
-        return self.enum
-
-    def get_value(self):
-        """Return the actual numerical value"""
-        return self.value
 
     def __lt__(self, value):
         return self.value < int(value)

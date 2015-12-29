@@ -162,6 +162,14 @@ class UseTestCase(unittest.TestCase):
         self.assertFalse(CronSlices.is_valid('* * * * FRO-TOO'))
         self.assertFalse(CronSlices.is_valid('@retool'))
 
+    def test_25_open_pipe(self):
+        """Test opening pipes"""
+        from crontab import open_pipe, CRONCMD
+        pipe = open_pipe(CRONCMD, h=None, a='one', abc='two')
+        (out, err) = pipe.communicate()
+        self.assertEqual(err, '')
+        self.assertEqual(out, '-a|one|-h|--abc=two\n')
+
     def tearDown(self):
         for filename in self.filenames:
             if os.path.exists(filename):
