@@ -39,10 +39,27 @@ class LogReader(object):
     """Opens a Log file, reading backwards and watching for changes"""
     def __init__(self, filename, mass=4096):
         self.filename = filename
-        self.pipe     = codecs.open(filename, 'r', encoding='utf-8')
-        self.mass     = mass
-        self.size     = -1
-        self.read     = -1
+        self.mass = mass
+        self.size = -1
+        self.read = -1
+        self.pipe = None
+
+    def __enter__(self):
+        self.size = os.stat(self.filename)[6]
+        self.pipe = codecs.open(self.filename, 'r', encoding='utf-8')
+        return self
+
+    def __exit__(self, error_type, value, traceback):
+        self.pipe.close()
+
+    def __iter__(self):
+        if self.pipe is None:
+            with self as reader:
+                for (offset, line) in reader.readlines():
+                    yield line
+        else:
+            for (offset, line) in self.readlines():
+                yield line
 
     def readlines(self, until=0):
         """Iterator for reading lines from a file backwards"""
@@ -50,10 +67,8 @@ class LogReader(object):
             raise IOError("Can't readline, no opened file.")
         # Always seek to the end of the file, this accounts for file updates
         # that happen during our running process.
-        self.size = os.stat(self.filename)[6]
-        block_num = 0
-        location  = self.size
-        halfline  = ''
+        location = self.size
+        halfline = ''
 
         while location > until:
             location -= self.mass
@@ -74,23 +89,22 @@ class LogReader(object):
                 yield (loc, line)
                 loc -= len(line)
 
-    def __iter__(self):
-        for (offset, line) in self.readlines():
-            yield line
 
 
 class CronLog(LogReader):
+    """Use the LogReader to make a Cron specific log reader"""
     def __init__(self, filename='/var/log/syslog', user=None):
         LogReader.__init__(self, filename)
         self.user = user
 
     def for_program(self, command):
+        """Return log entries for this specific command name"""
         return ProgramLog(self, command)
 
     def __iter__(self):
-        for (offset, line) in self.readlines():
-            c = re.match(MATCHER, unicode(line))
-            datum = c and c.groupdict()
+        for line in super(CronLog, self).__iter__():
+            match = re.match(MATCHER, unicode(line))
+            datum = match and match.groupdict()
             if datum and (not self.user or datum['user'] == self.user):
                 datum['date'] = dateparse.parse(datum['date'])
                 yield datum

@@ -86,6 +86,7 @@ import re
 import sys
 
 import codecs
+import logging
 import tempfile
 import subprocess as sp
 
@@ -93,7 +94,7 @@ from collections import OrderedDict
 from datetime import time, date, datetime
 
 __pkgname__ = 'python-crontab'
-__version__ = '1.9.5'
+__version__ = '2.0'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -293,7 +294,11 @@ class CronTab(object):
         if not self.filen:
             # Add the entire crontab back to the user crontab
             if self.user:
-                open_pipe(CRONCMD, path, **self.user_opt).wait()
+                proc = open_pipe(CRONCMD, path, **self.user_opt)
+                # XXX This could do with being cleaned up quite a bit
+                proc.wait()
+                proc.stdout.close()
+                proc.stderr.close()
                 os.unlink(path)
             else:
                 os.unlink(path)
@@ -769,7 +774,7 @@ class CronSlices(list):
             try:
                 set_a.parse(set_b)
             except ValueError as error:
-                sys.stderr.write("WARNING: %s\n" % str(error))
+                logging.warning(str(error))
                 return False
             except Exception:
                 return False

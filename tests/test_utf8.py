@@ -56,7 +56,8 @@ class Utf8TestCase(unittest.TestCase):
         self.crontab.write(filename)
         crontab = CronTab(tabfile=filename)
         self.assertTrue(crontab)
-        self.assertEqual(content, open(filename, "r").read())
+        with open(filename, "r") as fhl:
+            self.assertEqual(content, fhl.read())
         os.unlink(filename)
 
     def test_04_command(self):

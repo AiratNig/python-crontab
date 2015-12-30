@@ -77,7 +77,8 @@ READ_LINE = [ 'The End', 'Sickem', '2', '9', 'First Line', LONG_LINE ]
 class BasicTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
-        self.crontab = CronTab(tab=INITAL_TAB, log=os.path.join(TEST_DIR, 'data', 'test.log'))
+        self.log = os.path.join(TEST_DIR, 'data', 'test.log')
+        self.crontab = CronTab(tab=INITAL_TAB, log=self.log)
 
     def test_00_logreader(self):
         """Log Reader"""
@@ -88,7 +89,8 @@ class BasicTestCase(unittest.TestCase):
 
     def test_01_cronreader(self):
         """Cron Log Lines"""
-        lines = list(self.crontab.log.readlines())
+        with self.crontab.log as log:
+            lines = list(log.readlines())
         self.assertEqual(len(lines), 32)
         self.assertEqual(lines[0][1], "Apr  4 21:34:01 servername CRON[16592]: (root) CMD (rootscript &> /dev/null)")
         self.assertEqual(lines[15][1], "Apr  4 21:28:31 servername NOTCRON: that these are ignored")
@@ -140,7 +142,7 @@ class BasicTestCase(unittest.TestCase):
 
     def test_08_readerror(self):
         """Cron Log Error"""
-        self.crontab.log.pipe.close()
+        self.crontab.log.pipe = False
         with self.assertRaises(IOError):
             list(self.crontab.log.readlines())
 
