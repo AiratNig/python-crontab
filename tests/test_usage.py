@@ -167,8 +167,8 @@ class UseTestCase(unittest.TestCase):
         from crontab import open_pipe, CRONCMD
         pipe = open_pipe(CRONCMD, h=None, a='one', abc='two')
         (out, err) = pipe.communicate()
-        self.assertEqual(err, '')
-        self.assertEqual(out, '-a|one|-h|--abc=two\n')
+        self.assertEqual(err, b'')
+        self.assertEqual(out, b'--abc=two|-a|-h|one\n')
 
     def tearDown(self):
         for filename in self.filenames:

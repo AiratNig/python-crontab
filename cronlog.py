@@ -14,25 +14,26 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 #
+"""
+Access logs in known locations to find information about them.
+"""
 
 import os
 import re
-import sys
-import string
 import codecs
 import platform
 
-py3 = platform.python_version()[0] == '3'
-if py3:
-    unicode = str
+PY3 = platform.python_version()[0] == '3'
+
+if PY3:
+     # pylint: disable=W0622
+     unicode = str
+     basestring = str
 
 from dateutil import parser as dateparse
 
 MATCHER = r'(?P<date>\w+ +\d+ +\d\d:\d\d:\d\d) (?P<host>\w+) ' + \
         r'CRON\[(?P<pid>\d+)\]: \((?P<user>\w+)\) CMD \((?P<cmd>.*)\)'
-
-def size(filename):
-    return os.stat(filename)[6]
 
 class LogReader(object):
     """Opens a Log file, reading backwards and watching for changes"""
@@ -49,7 +50,7 @@ class LogReader(object):
             raise IOError("Can't readline, no opened file.")
         # Always seek to the end of the file, this accounts for file updates
         # that happen during our running process.
-        self.size = size(self.filename)
+        self.size = os.stat(self.filename)[6]
         block_num = 0
         location  = self.size
         halfline  = ''

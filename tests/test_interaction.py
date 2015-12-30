@@ -22,6 +22,8 @@ Test crontab interaction.
 import os
 import sys
 
+sys.path.insert(0, '../')
+
 import unittest
 from crontab import CronTab, CronSlices, CronSlice, PY3
 try:
@@ -59,8 +61,6 @@ RESULT_TAB = """# First Comment
 @reboot rebooted # re-id
 # Last Comment @has this # extra
 """
-
-sys.stderr = open('/dev/null', 'w')
 
 class InteractionTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
@@ -129,19 +129,19 @@ class InteractionTestCase(unittest.TestCase):
     def test_07_range(self):
         """Render Time Ranges"""
         job = self.crontab.new(command='range')
-        job.minute.during(4,10)
+        job.minute.during(4, 10)
         self.assertEqual(job.render(), '4-10 * * * * range')
-        job.minute.during(15,19)
+        job.minute.during(15, 19)
         self.assertEqual(job.render(), '15-19 * * * * range')
         job.minute.clear()
         self.assertEqual(job.render(), '* * * * * range')
-        job.minute.during(15,19)
+        job.minute.during(15, 19)
         self.assertEqual(job.render(), '15-19 * * * * range')
-        job.minute.also.during(4,10)
+        job.minute.also.during(4, 10)
         self.assertEqual(job.render(), '4-10,15-19 * * * * range')
 
     def test_08_sequence(self):
-        """Render Time Sequences""" 
+        """Render Time Sequences"""
         job = self.crontab.new(command='seq')
         job.hour.every(4)
         self.assertEqual(job.render(), '* */4 * * * seq')
@@ -221,7 +221,6 @@ class InteractionTestCase(unittest.TestCase):
         self.assertGreater(three, 2)
         self.assertLess(three, 4)
         self.assertEqual(str(three), '2-4')
-        
 
     def test_20_write(self):
         """Write CronTab to file"""
@@ -234,10 +233,10 @@ class InteractionTestCase(unittest.TestCase):
         cron = '# start of tab\n'
         for i in range(10):
             crontab = CronTab(tab=cron)
-            job = list(crontab.new(command='multi'))
+            list(crontab.new(command='multi%d' % i))
             cron = unicode(crontab)
             crontab = CronTab(tab=cron)
-            list(crontab.find_command('multi'))[0].delete()
+            list(crontab.find_command('multi%d' % i))[0].delete()
             cron = unicode(crontab)
         self.assertEqual(unicode(crontab), '# start of tab\n')
 
@@ -302,7 +301,7 @@ class InteractionTestCase(unittest.TestCase):
 
     def test_27_commands(self):
         """Get all commands"""
-        self.assertEqual(list(self.crontab.commands), 
+        self.assertEqual(list(self.crontab.commands),
                          [u'firstcommand', u'range', u'byweek',
                           u'disabled', u'spaced', u'rebooted'])
 
@@ -311,8 +310,5 @@ class InteractionTestCase(unittest.TestCase):
         self.assertEqual(list(self.crontab.comments),
                          ['Comment One', 'Comment  Two', 're-id'])
 
-
 if __name__ == '__main__':
-    test_support.run_unittest(
-       InteractionTestCase,
-    )
+    test_support.run_unittest(InteractionTestCase)

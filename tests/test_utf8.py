@@ -69,22 +69,22 @@ class Utf8TestCase(unittest.TestCase):
 
     def test_06_unicode(self):
         """Write New via Unicode"""
-        c = self.crontab.new(command=u"ůțƒ_command",  comment=u'ůțƒ_comment')
-        self.assertEqual(c.command, u"ůțƒ_command")
-        self.assertEqual(c.comment, u"ůțƒ_comment")
+        job = self.crontab.new(command=u"ůțƒ_command", comment=u'ůțƒ_comment')
+        self.assertEqual(job.command, u"ůțƒ_command")
+        self.assertEqual(job.comment, u"ůțƒ_comment")
         self.crontab.render()
 
     def test_07_utf8(self):
         """Write New via UTF-8"""
-        c = self.crontab.new(command='\xc5\xaf\xc8\x9b\xc6\x92_command',
-                             comment='\xc5\xaf\xc8\x9b\xc6\x92_comment')
+        job = self.crontab.new(command=b'\xc5\xaf\xc8\x9b\xc6\x92_command',
+                               comment=b'\xc5\xaf\xc8\x9b\xc6\x92_comment')
         self.assertEqual(self.crontab.render(), u"""
 */4 * * * * ůțƒ_command # ůțƒ_comment
 
 * * * * * ůțƒ_command # ůțƒ_comment
 """)
-        self.assertEqual(type(c.command), unicode)
-        self.assertEqual(type(c.comment), unicode)
+        self.assertEqual(type(job.command), unicode)
+        self.assertEqual(type(job.comment), unicode)
 
     def test_08_utf8_str(self):
         """Test UTF8 (non unicode) strings"""

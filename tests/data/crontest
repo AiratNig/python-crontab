@@ -9,7 +9,7 @@ def main():
     loc = os.path.dirname(__file__)
 
     if '-h' in args:
-        print('|'.join(args))
+        print('|'.join(sorted(args)))
         return
 
     user = 'user'

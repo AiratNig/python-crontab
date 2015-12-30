@@ -165,6 +165,8 @@ def _unicode(text):
     """Convert to the best string format for this python version"""
     if type(text) is str and not PY3:
         return unicode(text, 'utf-8')
+    if type(text) is bytes and PY3:
+        return text.decode('utf-8')
     return text
 
 
