@@ -92,9 +92,17 @@ class BasicTestCase(unittest.TestCase):
         with self.crontab.log as log:
             lines = list(log.readlines())
         self.assertEqual(len(lines), 32)
-        self.assertEqual(lines[0][1], "Apr  4 21:34:01 servername CRON[16592]: (root) CMD (rootscript &> /dev/null)")
-        self.assertEqual(lines[15][1], "Apr  4 21:28:31 servername NOTCRON: that these are ignored")
-        self.assertEqual(lines[-1][1], "Apr  4 21:24:01 servername CRON[16490]: (user) CMD (userscript &> /dev/null)")
+        self.assertEqual(lines[0][1], "Apr  4 21:34:01 servername CRON[16592]"
+                                      ": (root) CMD (rootscript &> /dev/null)")
+        self.assertEqual(lines[15][1], "Apr  4 21:28:31 servername NOTCRON"
+                                      ": that these are ignored")
+        self.assertEqual(lines[-1][1], "Apr  4 21:24:01 servername CRON[16490]"
+                                      ": (user) CMD (userscript &> /dev/null)")
+
+    def test_01_iter(self):
+        """Iterate directly over log"""
+        with self.crontab.log as log:
+            self.assertEqual(len(list(log)), 8)
 
     def test_02_cronlog(self):
         """Cron Log Items"""
