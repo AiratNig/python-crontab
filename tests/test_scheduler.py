@@ -33,7 +33,7 @@ import random
 try:
     from StringIO import StringIO
 except ImportError:
-    from io import BytesIO as StringIO
+    from io import StringIO
 
 logger = logging.getLogger()
 logger.level = logging.WARNING
@@ -78,23 +78,23 @@ class SchedulerTestCase(unittest.TestCase):
         self.assertEqual(self.err.getvalue().strip(), text)
 
     def assertSchedule(self, slices, count, result):
-        uid = random.choice(string.letters)
+        uid = random.choice(string.ascii_letters)
         self.tab.new(command=COMMAND + uid).setall(slices)
         ret = list(self.tab.run_scheduler(count, cadence=0.01, warp=True))
         self.assertEqual(len(ret), result)
         if count > 0:
-            self.assertEqual(ret[0], b'-h|' + uid)
+            self.assertEqual(ret[0], '-h|' + uid)
 
     def test_01_run(self):
         """Run the command"""
         ret = self.tab.new(command=COMMAND+'A').run()
-        self.assertEqual(ret, b'-h|A')
+        self.assertEqual(ret, '-h|A')
 
     def test_02_run_error(self):
         """Run with errors"""
         ret = self.tab.new(command=COMMAND[:-3]+'-e B').run()
-        self.assertEqual(ret, b'')
-        self.assertLog(b'-e|B')
+        self.assertEqual(ret, '')
+        self.assertLog('-e|B')
 
     def test_03_schedule(self):
         """Simple Schedule"""

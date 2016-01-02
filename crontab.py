@@ -151,7 +151,6 @@ if PY3:
     unicode = str
     basestring = str
 
-
 def open_pipe(cmd, *args, **flags):
     """Runs a program and orders the arguments for compatability.
 
@@ -618,8 +617,8 @@ class CronItem(object):
             shell = self.cron.env['SHELL']
         (out, err) = open_pipe(shell, '-c', self.command).communicate()
         if err:
-            LOG.error(err)
-        return out.strip()
+            LOG.error(err.decode("utf-8"))
+        return out.decode("utf-8").strip()
 
     def schedule(self, date_from=None):
         """Return a croniter schedule if available."""

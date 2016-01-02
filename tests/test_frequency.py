@@ -132,22 +132,22 @@ class FrequencyTestCase(unittest.TestCase):
     def test_14_all(self):
         """Test Maximum"""
         self.job.setall("* * * * *")
-        self.assertEqual(self.job.frequency(), 525600)
+        self.assertEqual(self.job.frequency(2010), 525600)
         self.assertEqual(self.job.frequency_per_year(year=2010), 365)
         self.assertEqual(self.job.frequency_per_day(), 1440)
         self.job.setall("*")
         self.assertEqual(self.job.frequency_per_day(), 1440)
         self.assertEqual(self.job.frequency_per_year(year=2010), 365)
-        self.assertEqual(self.job.frequency(), 525600)
+        self.assertEqual(self.job.frequency(2010), 525600)
 
     def test_15_compare(self):
         """Compare Times"""
         job = self.crontab.new(command='match')
         job.setall("*/2 * * * *")
-        self.assertEqual( job.slices, "*/2 * * * *" )
-        self.assertEqual( job.slices, ["*/2"] )
-        self.assertLess( job, ["*"] )
-        self.assertGreater( job, "*/3" )
+        self.assertEqual(job.slices, "*/2 * * * *")
+        self.assertEqual(job.slices, ["*/2"])
+        self.assertLess(job, ["*"])
+        self.assertGreater(job, "*/3")
 
     def test_16_frequency_per_hour(self):
         """Count per hour"""
