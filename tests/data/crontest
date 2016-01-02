@@ -11,6 +11,9 @@ def main():
     if '-h' in args:
         print('|'.join(sorted(args)))
         return
+    elif '-e' in args:
+        sys.stderr.write('|'.join(sorted(args)) + "\n")
+        return
 
     user = 'user'
     if '-u' in args:

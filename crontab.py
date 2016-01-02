@@ -83,15 +83,16 @@ job3.schedule().get_prev()
 
 import os
 import re
-import sys
+import shlex
 
 import codecs
 import logging
 import tempfile
 import subprocess as sp
 
+from time import sleep
 from collections import OrderedDict
-from datetime import time, date, datetime
+from datetime import time, date, datetime, timedelta
 
 __pkgname__ = 'python-crontab'
 __version__ = '2.0'
@@ -131,14 +132,19 @@ PY3 = platform.python_version()[0] == '3'
 WINOS = platform.system() == 'Windows'
 SYSTEMV = not WINOS and os.uname()[0] in ["SunOS", "AIX", "HP-UX"]
 
+LOG = logging.getLogger('crontab')
+
+CRONCMD = "/usr/bin/crontab"
+SHELL = os.environ.get('SHELL', '/bin/sh')
+# The shell won't actually work on windows here, but
+# it should be updated later in the below conditional.
+
 current_user = lambda: None
 if not WINOS:
     import pwd
     def current_user():
         """Returns the username of the current user"""
         return pwd.getpwuid(os.getuid())[0]
-
-CRONCMD = "/usr/bin/crontab"
 
 if PY3:
     # pylint: disable=W0622
@@ -151,7 +157,7 @@ def open_pipe(cmd, *args, **flags):
 
     a. keyword args are flags and always appear /before/ arguments for bsd
     """
-    cmd_args = tuple(cmd.split(' '))
+    cmd_args = tuple(shlex.split(cmd))
     for (key, value) in flags.items():
         if len(key) == 1:
             cmd_args += ("-%s" % key),
@@ -308,6 +314,26 @@ class CronTab(object):
         """Write the crontab to a user (or root) instead of a file."""
         return self.write(user=user)
 
+    def run_pending(self, **kwargs):
+        """Run all commands in this crontab if pending (generator)"""
+        for job in self:
+            ret = job.run_pending(**kwargs)
+            if ret is not None:
+                yield ret
+
+    def run_scheduler(self, timeout=0, **kwargs):
+        """Run the CronTab as an internal scheduler (generator)"""
+        count = 0
+        self.run_pending()
+        while count != timeout:
+            count += 1
+            sleep(kwargs.get('cadence', 60))
+            now = datetime.now()
+            if 'warp' in kwargs:
+                now += timedelta(seconds=count * 60)
+            for value in self.run_pending(now=now):
+                yield value
+
     def render(self):
         """Render this crontab as it would be in the crontab."""
         envs = self.env.items()
@@ -435,6 +461,7 @@ class CronItem(object):
         self.special = False
         self.comment = None
         self.command = None
+        self.last_run = None
 
         self._log = None
 
@@ -572,8 +599,30 @@ class CronItem(object):
         """Returns the number of times this item will execute in any hour"""
         return self.slices.frequency_per_hour()
 
+    def run_pending(self, now=None):
+        """Runs the command if scheduled"""
+        now = now or datetime.now()
+        if self.is_enabled():
+            if self.last_run is not None:
+                next_time = self.schedule(self.last_run).get_next()
+                if next_time < now:
+                    self.last_run = now
+                    return self.run()
+            else:
+                self.last_run = now
+
+    def run(self):
+        """Runs the given command as a pipe"""
+        shell = SHELL
+        if self.cron and 'SHELL' in self.cron.env:
+            shell = self.cron.env['SHELL']
+        (out, err) = open_pipe(shell, '-c', self.command).communicate()
+        if err:
+            LOG.error(err)
+        return out.strip()
+
     def schedule(self, date_from=None):
-        """Return a croniter schedule is available."""
+        """Return a croniter schedule if available."""
         if not date_from:
             date_from = datetime.now()
         try:
@@ -774,7 +823,7 @@ class CronSlices(list):
             try:
                 set_a.parse(set_b)
             except ValueError as error:
-                logging.warning(str(error))
+                LOG.warning(str(error))
                 return False
             except Exception:
                 return False

@@ -33,7 +33,7 @@ try:
 except ImportError:
     from test import support as test_support
 
-crontab.logging.basicConfig(level=crontab.logging.ERROR)
+crontab.LOG.setLevel(crontab.logging.ERROR)
 TEST_DIR = os.path.dirname(__file__)
 
 class DummyStdout(object):

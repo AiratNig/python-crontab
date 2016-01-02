@@ -110,6 +110,11 @@ Setting the slice to a python date object::
     job.setall(date(2000, 4, 2))
     job.setall(datetime(2000, 4, 2, 10, 2))
 
+Run a jobs command. Running the job here will not effect it's
+existing schedule with another crontab process::
+
+    job_standard_output = job.run()
+
 Creating a job with a comment::
 
     job = cron.new(command='/foo/bar', comment='SomeID')
@@ -224,6 +229,25 @@ and replace it with a simple single unit::
     job.every(2).dows()   == '0 0 * * */2'
 
 This is a convenience method only, it does normal things with the existing api.
+
+Running the Scheduler
+=====================
+
+The module is able to run a cron tab as a daemon as long as the optional
+croniter module is installed; each process will block and errors will
+be logged (new in 2.0).
+
+(note this functionality is new and not perfect, if you find bugs report them!)
+
+Running the scheduler::
+
+    tab = CronTab(tabfile='MyScripts.tab')
+    for result in tab.run_scheduler():
+        print "This was printed to stdout by the process."
+
+Do not do this, it won't work because it returns generator function::
+
+    tab.run_scheduler()
 
 Frequency Calculation
 =====================
