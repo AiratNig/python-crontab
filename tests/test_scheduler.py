@@ -87,6 +87,7 @@ class SchedulerTestCase(unittest.TestCase):
 
     def test_01_run(self):
         """Run the command"""
+        self.tab.env['SHELL'] = crontab.SHELL
         ret = self.tab.new(command=COMMAND+'A').run()
         self.assertEqual(ret, '-h|A')
 
