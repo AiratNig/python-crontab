@@ -95,7 +95,7 @@ from collections import OrderedDict
 from datetime import time, date, datetime, timedelta
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.0'
+__version__ = '2.0.1'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
