@@ -79,6 +79,11 @@ class RemovalTestCase(unittest.TestCase):
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 67)
 
+    def test_05_remove_all_error(self):
+        """Remove all with old arg"""
+        with self.assertRaises(AttributeError):
+            self.crontab.remove_all('command')
+
     def test_06_removal_of_none(self):
         """Remove all respects None as a possible value"""
         self.crontab[1].set_comment(None)
