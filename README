@@ -52,6 +52,8 @@ Case        Meaning
 How to Use the Module
 =====================
 
+**Note:** Several users have reported their new crontabs not saving automatically. At this point you MUST use write() if you want your edits to be saved out. See below for full details on the use of the write function.
+
 Getting access to a crontab can happen in five ways, three system methods that
 will work only on Unix and require you to have the right permissions::
 
