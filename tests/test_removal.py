@@ -91,6 +91,13 @@ class RemovalTestCase(unittest.TestCase):
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 67)
 
+    def test_07_removal_in_loop(self):
+        """Remove items in a loop"""
+        for job in self.crontab:
+            self.crontab.remove(job)
+        self.assertEqual(len(self.crontab), 0)
+
+
 if __name__ == '__main__':
     test_support.run_unittest(
        RemovalTestCase,

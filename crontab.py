@@ -434,7 +434,9 @@ class CronTab(object):
         return "<Unattached %sCronTab>" % kind
 
     def __iter__(self):
-        return self.crons.__iter__()
+        """Return generator so we can track jobs after removal"""
+        for job in list(self.crons.__iter__()):
+            yield job
 
     def __getitem__(self, i):
         return self.crons[i]
