@@ -32,8 +32,7 @@ except ImportError:
     from test import support as test_support
 
 TEST_FILE = os.path.join(os.path.dirname(__file__), 'data', 'crontab')
-INITAL_TAB = """
-VAR=foo
+INITAL_TAB = """VAR=foo
 JAR=bar
 
 */30 * * * * palin one_cross_each
@@ -70,7 +69,16 @@ JAR=bar
 * * * * * pontus release_brian
 """)
 
-    def test_03_failure(self):
+    def test_03_new_tab(self):
+        """Create a new system crontab"""
+        tab = CronTab(user=False)
+        tab.env['SHELL'] = '/usr/bin/roman'
+        job = tab.new(command='release_bwian', user='pontus')
+        self.assertEqual(str(tab), """SHELL=/usr/bin/roman
+* * * * * pontus release_bwian
+""")
+
+    def test_04_failure(self):
         """Fail when no user"""
         with self.assertRaises(ValueError):
             self.crontab.new(command='im_brian')
@@ -79,7 +87,7 @@ JAR=bar
         with self.assertRaises(ValueError):
             cron.render()
 
-    def test_04_remove(self):
+    def test_05_remove(self):
         """Remove the user flag"""
         self.crontab._user = None
         self.assertEqual(str(self.crontab), """VAR=foo
@@ -90,20 +98,20 @@ JAR=bar
         self.crontab.new(command='now_go_away')
 
 
-    def test_05_comments(self):
+    def test_06_comments(self):
         """Comment with six parts parses successfully"""
         crontab = CronTab(user=False, tab="""
 #a system_comment that has six parts_will_fail_to_parse
         """)
 
-    def test_06_recreation(self):
+    def test_07_recreation(self):
         """Input doesn't change on save"""
         crontab = CronTab(user=False, tab="* * * * * user command")
         self.assertEqual(str(crontab), "* * * * * user command\n")
         crontab = CronTab(user=False, tab="* * * * * user command\n")
         self.assertEqual(str(crontab), "* * * * * user command\n")
 
-    def test_07_variables(self):
+    def test_08_variables(self):
         """Vixie cron variables support"""
         self.assertEqual(self.crontab.env, {'VAR': 'foo', 'JAR': 'bar'})
         self.crontab.env['SHELL'] = 'bash'
@@ -111,7 +119,16 @@ JAR=bar
 */30 * * * * palin one_cross_each
 """)
 
-    def test_08_system_file(self):
+    def test_09_resaving(self):
+        """Cycle rendering to show no changes"""
+        print self.crontab.env
+        print self.crontab.lines
+        for i in range(10):
+            self.crontab = CronTab(tab=str(self.crontab))
+
+        self.assertEqual(str(self.crontab), INITAL_TAB.lstrip())
+
+    def test_10_system_file(self):
         """Load system crontab from a file"""
         crontab = CronTab(user=False, tabfile=TEST_FILE)
         self.assertEqual(repr(crontab), "<System CronTab '%s'>" % TEST_FILE)

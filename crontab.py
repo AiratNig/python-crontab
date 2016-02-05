@@ -338,7 +338,7 @@ class CronTab(object):
         envs = self.env.items()
         env = ["%s=%s" % (key, _unicode(val)) for (key, val) in envs]
         crons = [unicode(cron) for cron in self.lines]
-        result = u'\n'.join(env) + u'\n'.join(crons)
+        result = u'\n'.join(env + crons)
         if result and result[-1] not in (u'\n', u'\r'):
             result += u'\n'
         return result
