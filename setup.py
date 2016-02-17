@@ -28,6 +28,7 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 with open('README') as fhl:
     description = fhl.read()
 
+# Used for rpm building
 RELEASE = "1"
 
 setup(
