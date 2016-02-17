@@ -28,9 +28,12 @@ if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 with open('README') as fhl:
     description = fhl.read()
 
+RELEASE = "1"
+
 setup(
     name             = __pkgname__,
     version          = __version__,
+    release          = RELEASE,
     description      = 'Python Crontab API',
     long_description = description,
     author           = 'Martin Owens',
@@ -57,6 +60,15 @@ setup(
       'Programming Language :: Python :: 2.6',
       'Programming Language :: Python :: 2.7',
       'Programming Language :: Python :: 3.3',
-    ]
+    ],
+    options = {
+      'bdist_rpm': {
+        'build_requires': [
+          'python',
+          'python-setuptools',
+        ],
+        'release': RELEASE,
+      },
+    },
  )
 
