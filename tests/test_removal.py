@@ -43,12 +43,13 @@ START_TAB = """
 class RemovalTestCase(unittest.TestCase):
     """Test basic functionality of crontab."""
     def setUp(self):
+        self.filenames = []
         self.crontab = CronTab(tab=START_TAB.strip())
 
     def test_01_remove(self):
         """Remove Item"""
         self.assertEqual(len(self.crontab), 3)
-        self.crontab.remove( self.crontab.crons[0] )
+        self.crontab.remove(self.crontab.crons[0])
         self.assertEqual(len(self.crontab), 2)
         self.assertEqual(len(self.crontab.render()), 69)
 
@@ -96,6 +97,32 @@ class RemovalTestCase(unittest.TestCase):
         for job in self.crontab:
             self.crontab.remove(job)
         self.assertEqual(len(self.crontab), 0)
+
+    def test_08_removal_write_loop(self):
+        """Remove items in a loop and save each time"""
+        filename = self.get_new_file('removal')
+        crontab = CronTab()
+        for i in range(10):
+            crontab.new('test', comment=str(i))
+            crontab.write(filename)
+            crontab = CronTab(tabfile=filename)
+
+            crontab.remove_all(comment=str(i))
+            crontab.write(filename)
+            crontab = CronTab(tabfile=filename)
+        self.assertEqual(len(crontab), 0)
+
+    def get_new_file(self, name):
+        """Gets a filename and records it for deletion"""
+        this_dir = os.path.dirname(__file__)
+        filename = os.path.join(this_dir, 'data', 'spool', name)
+        self.filenames.append(filename)
+        return filename
+
+    def tearDown(self):
+        for filename in self.filenames:
+            if os.path.isfile(filename):
+                os.unlink(filename)
 
 
 if __name__ == '__main__':

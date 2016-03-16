@@ -139,6 +139,8 @@ SHELL = os.environ.get('SHELL', '/bin/sh')
 # The shell won't actually work on windows here, but
 # it should be updated later in the below conditional.
 
+# pylint: disable=W0622,invalid-name,too-many-public-methods
+# pylint: disable=function-redefined,too-many-instance-attributes
 current_user = lambda: None
 if not WINOS:
     import pwd
@@ -147,7 +149,6 @@ if not WINOS:
         return pwd.getpwuid(os.getuid())[0]
 
 if PY3:
-    # pylint: disable=W0622
     unicode = str
     basestring = str
 
@@ -300,7 +301,7 @@ class CronTab(object):
             # Add the entire crontab back to the user crontab
             if self.user:
                 proc = open_pipe(CRONCMD, path, **self.user_opt)
-                # XXX This could do with being cleaned up quite a bit
+                # This could do with being cleaned up quite a bit
                 proc.wait()
                 proc.stdout.close()
                 proc.stderr.close()
