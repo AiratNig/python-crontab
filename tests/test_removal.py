@@ -106,11 +106,14 @@ class RemovalTestCase(unittest.TestCase):
             crontab.new('test', comment=str(i))
             crontab.write(filename)
             crontab = CronTab(tabfile=filename)
+            self.assertEqual(len(crontab), 1)
+            self.assertNotEqual(str(crontab), '')
 
             crontab.remove_all(comment=str(i))
             crontab.write(filename)
             crontab = CronTab(tabfile=filename)
-        self.assertEqual(len(crontab), 0)
+            self.assertEqual(len(crontab), 0)
+            self.assertEqual(str(crontab), '')
 
     def get_new_file(self, name):
         """Gets a filename and records it for deletion"""
