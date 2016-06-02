@@ -210,14 +210,14 @@ class InteractionTestCase(unittest.TestCase):
         with self.assertRaises(ValueError):
             dow.parse_value('b')
 
-        self.assertEqual(dow.get_range().render(), '*')
+        self.assertEqual(dow.get_range()[0].render(), '*')
         with self.assertRaises(ValueError):
             dow.get_range('%')
 
     def test_17_range_cmp(self):
         """Compare ranges"""
         dow = CronSlice({'max': 5, 'min': 0})
-        three = dow.get_range(2, 4)
+        three = dow.get_range(2, 4)[0]
         self.assertGreater(three, 2)
         self.assertLess(three, 4)
         self.assertEqual(str(three), '2-4')

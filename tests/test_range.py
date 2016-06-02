@@ -86,15 +86,12 @@ class RangeTestCase(unittest.TestCase):
         tab = CronTab(tab="""
 * * * * 7 command
 * * * * 5-7 command
+* * * * 1-7 command
 * * * * */7 command
 """)
-        self.assertEqual(len(tab), 2)
-        self.assertEqual(tab.render(), """
-* * * * 0 command
-* * * * 5-6 command
-* * * * */7 command
-""")
-
+        self.assertEqual(len(tab), 4)
+        record = [str(job.slices[-1]) for job in tab]
+        self.assertEqual(record, ["0", "0,5-6", "*", "0"])
 
 if __name__ == '__main__':
     test_support.run_unittest(

@@ -95,7 +95,7 @@ from collections import OrderedDict
 from datetime import time, date, datetime, timedelta
 
 __pkgname__ = 'python-crontab'
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 ITEMREX = re.compile(r'^\s*([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)\s+([^@#\s]+)'
                      r'\s+([^@#\s]+)\s+([^#\n]*)(\s+#\s*([^\n]*)|$)')
@@ -759,6 +759,7 @@ class Every(object):
             raise ValueError("Invalid value '%s', outside 1 year" % self.unit)
         self.slices.setall('@yearly')
 
+
 class CronSlices(list):
     """Controls a list of five time 'slices' which reprisent:
         minute frequency, hour frequency, day of month frequency,
@@ -930,14 +931,13 @@ class CronSlice(object):
             return self.clear()
         for part in str(value).split(','):
             if part.find("/") > 0 or part.find("-") > 0 or part == '*':
-                self.parts.append(self.get_range(part))
-            else:
-                try:
-                    self.parts.append(self.parse_value(part))
-                except SundayError:
-                    self.parts.append(0)
-                except ValueError as err:
-                    raise ValueError('%s:%s/%s' % (str(err), self.name, part))
+                self.parts += self.get_range(part)
+                continue
+
+            try:
+                self.parts.append(self.parse_value(part, sunday=0))
+            except ValueError as err:
+                raise ValueError('%s:%s/%s' % (str(err), self.name, part))
 
     def render(self, resolve=False):
         """Return the slice rendered as a crontab.
@@ -965,7 +965,7 @@ class CronSlice(object):
         """Set the every X units value"""
         if not also:
             self.clear()
-        self.parts.append(self.get_range(int(n_value)))
+        self.parts += self.get_range(int(n_value))
         return self.parts[-1]
 
     def on(self, *n_value, **opts):
@@ -973,17 +973,14 @@ class CronSlice(object):
         if not opts.get('also', False):
             self.clear()
         for set_a in n_value:
-            try:
-                self.parts += self.parse_value(set_a),
-            except SundayError:
-                self.parts += 0,
+            self.parts += self.parse_value(set_a, sunday=0),
         return self.parts
 
     def during(self, vfrom, vto, also=False):
         """Set the During value, which sets a range"""
         if not also:
             self.clear()
-        self.parts.append(self.get_range(self.parse_value(vfrom), self.parse_value(vto)))
+        self.parts += self.get_range(str(vfrom) + '-' + str(vto))
         return self.parts[-1]
 
     @property
@@ -997,7 +994,10 @@ class CronSlice(object):
 
     def get_range(self, *vrange):
         """Return a cron range for this slice"""
-        return CronRange(self, *vrange)
+        ret = CronRange(self, *vrange)
+        if ret.dangling is not None:
+            return [ret.dangling, ret]
+        return [ret]
 
     def __iter__(self):
         """Return the entire element as an iterable"""
@@ -1018,7 +1018,7 @@ class CronSlice(object):
         """Returns the number of times this slice happens in it's range"""
         return len(list(self.__iter__()))
 
-    def parse_value(self, val):
+    def parse_value(self, val, sunday=None):
         """Parse the value of the cron slice and raise any errors needed"""
         if val == '>':
             val = self.max
@@ -1032,16 +1032,14 @@ class CronSlice(object):
             raise KeyError("No enumeration '%s' got '%s'" % (self.name, val))
 
         if self.max == 6 and int(out) == 7:
+            if sunday is not None:
+                return sunday
             raise SundayError("Detected Sunday as 7 instead of 0!")
 
         if int(out) < self.min or int(out) > self.max:
             raise ValueError("Invalid value '%s', expected %d-%d for %s" % (
                 str(val), self.min, self.max, self.name))
         return out
-
-    def filter_value(self, val):
-        """Support wrapper for enumerations and check for range"""
-        return self.parse_value(val)
 
 
 def get_cronvalue(value, enums):
@@ -1093,6 +1091,8 @@ def _render(value, resolve=False):
 class CronRange(object):
     """A range between one value and another for a time range."""
     def __init__(self, vslice, *vrange):
+        # holds an extra dangling entry, for example sundays.
+        self.dangling = None
         self.slice = vslice
         self.cron = None
         self.seq = 1
@@ -1112,16 +1112,24 @@ class CronRange(object):
         """Parse a ranged value in a cronjob"""
         if value.count('/') == 1:
             value, seq = value.split('/')
-            self.seq = self.slice.filter_value(seq)
+            try:
+                self.seq = self.slice.parse_value(seq)
+            except SundayError:
+                self.seq = 1
+                value = "0-0"
             if self.seq < 1 or self.seq > self.slice.max - 1:
                 raise ValueError("Sequence can not be divided by zero or max")
         if value.count('-') == 1:
             vfrom, vto = value.split('-')
-            self.vfrom = self.slice.filter_value(vfrom)
+            self.vfrom = self.slice.parse_value(vfrom, sunday=0)
             try:
-                self.vto = self.slice.filter_value(vto)
+                self.vto = self.slice.parse_value(vto)
             except SundayError:
-                self.vto = 6
+                if self.vfrom == 1:
+                    self.vfrom = 0
+                else:
+                    self.dangling = 0
+                self.vto = self.slice.parse_value(vto, sunday=6)
         elif value == '*':
             self.all()
         else:
@@ -1136,7 +1144,10 @@ class CronRange(object):
         """Render the ranged value for a cronjob"""
         value = '*'
         if int(self.vfrom) > self.slice.min or int(self.vto) < self.slice.max:
-            value = _render_values([self.vfrom, self.vto], '-', resolve)
+            if self.vfrom == self.vto:
+                value = str(self.vfrom)
+            else:
+                value = _render_values([self.vfrom, self.vto], '-', resolve)
         if self.seq != 1:
             value += "/%d" % self.seq
         if value != '*' and SYSTEMV:
